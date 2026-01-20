@@ -20,7 +20,6 @@ public class CameraModule extends SubsystemBase {
     public RobotContainer localRobotContainer;
     public PhotonCamera genericCamera;
     public double heading;
-
     public int cameraFidID;
     public double cameraX;
     public double cameraY;
