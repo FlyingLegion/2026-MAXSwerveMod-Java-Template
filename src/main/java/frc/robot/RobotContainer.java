@@ -26,6 +26,7 @@ import java.util.List;
 //subsystems
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.CameraSubsystem;
+import frc.robot.subsystems.CameraModule;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -40,6 +41,7 @@ public class RobotContainer {
 
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  PIDController pidController = new PIDController(0.0055, 0, 0);
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -75,7 +77,14 @@ public class RobotContainer {
         .whileTrue(new RunCommand(
             () -> m_robotDrive.setX(),
             m_robotDrive));
-  }
+            
+    new JoystickButton(m_driverController, Button.kL1.value)
+        .whileTrue(new RunCommand(
+            () -> m_robotDrive.drive(0.0, 0.0, pidController.calculate(m_cameraSubsystem.ArduCam.cameraYaw, 0), false)));
+    
+    
+    }
+
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
