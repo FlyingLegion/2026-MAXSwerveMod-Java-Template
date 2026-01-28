@@ -61,11 +61,11 @@ public class CameraModule extends SubsystemBase {
         heading = localRobotContainer.m_robotDrive.getHeading();
         Rotation2d gyroAngle = new Rotation2d(Constants.degreesToRadians * heading);
 
-        if (pipelineIndex == 0) {
-                    System.out.println("Using Ball Detection ");
-            } else if (pipelineIndex == 1) {
-                    System.out.println("Using AprilTag Detection ");
-            } 
+        // if (pipelineIndex == 0) {
+        //     System.out.println("Using Ball Detection ");
+        // } else if (pipelineIndex == 1) {
+        //     System.out.println("Using AprilTag Detection ");
+        // } 
             
         List<PhotonPipelineResult> results = genericCamera.getAllUnreadResults();
         if(!results.isEmpty()){

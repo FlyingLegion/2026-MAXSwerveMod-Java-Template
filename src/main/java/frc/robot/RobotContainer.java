@@ -21,6 +21,7 @@ import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import java.util.List;
 //subsystems
@@ -40,7 +41,8 @@ public class RobotContainer {
   public final CameraSubsystem m_cameraSubsystem = new CameraSubsystem(this);
 
   // The driver's controller
-  XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
+  //CommandXboxController m_opController = new CommandXboxController(OIConstants.kOperatorControllerPort);
   PIDController pidController = new PIDController(0.0055, 0, 0);
 
   /**
@@ -72,18 +74,22 @@ public class RobotContainer {
    * passing it to a
    * {@link JoystickButton}.
    */
-  private void configureButtonBindings() {
-    new JoystickButton(m_driverController, Button.kR1.value)
+private void configureButtonBindings() {
+    m_driverController.rightBumper()
         .whileTrue(new RunCommand(
             () -> m_robotDrive.setX(),
             m_robotDrive));
             
-    new JoystickButton(m_driverController, Button.kL1.value)
+    m_driverController.leftBumper()
         .whileTrue(new RunCommand(
             () -> m_robotDrive.drive(0.0, 0.0, pidController.calculate(m_cameraSubsystem.ArduCam.cameraYaw, 0), false)));
     
     
-    }
+    /* Manual reset for robot orientation */
+    m_driverController.start()
+        .onTrue(m_robotDrive.zeroHeadingCommand());
+    
+}
 
 
   /**
