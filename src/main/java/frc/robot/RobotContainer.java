@@ -43,7 +43,7 @@ public class RobotContainer {
   // The driver's controller
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
   //CommandXboxController m_opController = new CommandXboxController(OIConstants.kOperatorControllerPort);
-  PIDController pidController = new PIDController(0.0055, 0, 0);
+  PIDController pidRotationController = new PIDController(0.005, 0, 1);
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -75,15 +75,23 @@ public class RobotContainer {
    * {@link JoystickButton}.
    */
 private void configureButtonBindings() {
-    m_driverController.rightBumper()
+    m_driverController.rightTrigger()
         .whileTrue(new RunCommand(
             () -> m_robotDrive.setX(),
             m_robotDrive));
             
     m_driverController.leftBumper()
         .whileTrue(new RunCommand(
-            () -> m_robotDrive.drive(0.0, 0.0, pidController.calculate(m_cameraSubsystem.ArduCam.cameraYaw, 0), false)));
+            () -> m_robotDrive.drive(0.15, 0.0, 0.0 ,false),
+            m_robotDrive));
     
+    m_driverController.rightBumper()
+        .whileTrue(new RunCommand(
+        () ->  m_robotDrive.drive(-MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
+                                 -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband), 
+                                 pidRotationController.calculate(m_cameraSubsystem.ArduCam.cameraYaw, 0 ), 
+                                 true),
+             m_robotDrive));
     
     /* Manual reset for robot orientation */
     m_driverController.start()
