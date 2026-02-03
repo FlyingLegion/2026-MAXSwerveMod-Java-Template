@@ -32,6 +32,7 @@ public class CameraModule extends SubsystemBase {
     public Translation2d CameraToTargetTranslation;
     public Transform2d CameraToTarget;
     public int pipelineIndex;
+    public double targetDist;
     
 
     public static final AprilTagFieldLayout fieldLayout25 = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded); //loads the apriltag layout
@@ -42,13 +43,14 @@ public class CameraModule extends SubsystemBase {
         PortForwarder.add(5800, cameraRemoteHost, 5800);
         
         heading = 0;
+        targetDist = 0;
         cameraYaw = 0;
         cameraX = 0;
         cameraY = 0;
         cameraPitch = 0;
         cameraFidID = -1;
         cameraHasTargets = false;
-        targetDistanceMeters = 0;
+        // targetDistanceMeters = 0;
         pipelineIndex = genericCamera.getPipelineIndex();
         System.out.println("Camera Module Initialized (" + cameraName + "" + cameraRemoteHost + "");
         
@@ -75,6 +77,12 @@ public class CameraModule extends SubsystemBase {
                 PhotonTrackedTarget bestTarget = result.getBestTarget();
                 cameraYaw = bestTarget.getYaw();
                 cameraPitch = bestTarget.getPitch();
+                targetDist = PhotonUtils.calculateDistanceToTargetMeters(
+                    cameraX, 
+                    targetDist, 
+                    cameraPitch, 
+                    targetDist);
+                
                 
                 //  AprilTag code
                 /*

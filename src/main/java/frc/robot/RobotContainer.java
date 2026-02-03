@@ -43,7 +43,7 @@ public class RobotContainer {
   // The driver's controller
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
   //CommandXboxController m_opController = new CommandXboxController(OIConstants.kOperatorControllerPort);
-  PIDController pidRotationController = new PIDController(0.005, 0, 1);
+  PIDController pidRotationController = new PIDController(0.005, 0, 1); //Glass program Overides Coded PIDs
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -90,7 +90,7 @@ private void configureButtonBindings() {
         () ->  m_robotDrive.drive(-MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
                                  -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband), 
                                  pidRotationController.calculate(m_cameraSubsystem.ArduCam.cameraYaw, 0 ), 
-                                 true),
+                                 false),
              m_robotDrive));
     
     /* Manual reset for robot orientation */
