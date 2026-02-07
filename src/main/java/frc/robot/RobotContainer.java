@@ -89,7 +89,7 @@ private void configureButtonBindings() {
         .whileTrue(new RunCommand(
         () ->  m_robotDrive.drive(-MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
                                  -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband), 
-                                 pidRotationController.calculate(m_cameraSubsystem.ArduCam.cameraYaw, 0 ), 
+                                 pidRotationController.calculate(m_cameraSubsystem.ArduCam.targetYaw, 0 ), 
                                  false),
              m_robotDrive));
     
@@ -141,8 +141,29 @@ private void configureButtonBindings() {
 
     // Reset odometry to the starting pose of the trajectory.
     m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
-
+    // 67
     // Run path following command, then stop at the end.
     return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+  }
+
+  
+  public Translation2d polarToCartesian(Translation2d polar) {
+    //(r,theta)
+    double r = polar.getX();
+    double theta = polar.getY();
+    double x = r * Math.cos(theta);
+    double y = r * Math.sin(theta);
+    Translation2d cartesian = new Translation2d(x,y);
+    return cartesian;
+  }
+  
+  public Translation2d cartesianToPolar(Translation2d cartesian) {
+    //(r,theta)
+    double x = cartesian.getX();
+    double y = cartesian.getY();
+    double r = Math.sqrt(x * x + y * y);
+    double theta = Math.atan(y/x);
+    Translation2d polar = new Translation2d(r,theta);
+    return polar;
   }
 }

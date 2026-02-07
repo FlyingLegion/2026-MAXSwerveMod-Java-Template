@@ -1,56 +1,81 @@
 package frc.robot.subsystems;
+import java.lang.StackWalker.Option;
 import java.util.List;
+import java.util.Optional;
+
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-import org.photonvision.PhotonUtils;
-import edu.wpi.first.apriltag.*;
-import edu.wpi.first.math.geometry.*;
+
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.net.PortForwarder;
-import edu.wpi.first.wpilibj.smartdashboard.*;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.*;
-import frc.robot.Constants.CameraConstants;
+import frc.robot.Constants;
+import frc.robot.Robot;
+import frc.robot.RobotContainer;
 
 
 public class CameraModule extends SubsystemBase {
+    //Basic Things
     public RobotContainer localRobotContainer;
     public PhotonCamera genericCamera;
+    public boolean cameraHasTargets;
     public double heading;
-    public int cameraFidID;
+    public int pipelineIndex;
+
+    //Target Information
+    public int targetID;
+    public double targetYaw;
+    public double targetPitch;
+
+    //position things
+    public Transform3d robotToCam;
+    public PhotonPoseEstimator photonPoseEstimator;
+    public Optional<EstimatedRobotPose> robotPose;
+    //field relative XYZ positions
     public double cameraX;
     public double cameraY;
-    public double cameraYaw;
-    public double cameraPitch;
-    public double targetDistanceMeters;
-    public boolean cameraHasTargets;
-    public Pose2d fieldToTarget2D;
-    public Pose3d fieldToTarget3D;
-    public Translation2d CameraToTargetTranslation;
-    public Transform2d CameraToTarget;
-    public int pipelineIndex;
-    public double targetDist;
+    public double cameraZ;
     
     //AprilTag Map (VERY IMPORTANT)
     public static final AprilTagFieldLayout fieldLayout26 = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded); //loads the apriltag layout
 
     public CameraModule(String cameraName, String cameraRemoteHost, RobotContainer m_robotContainer){
         localRobotContainer = m_robotContainer;
-        genericCamera = new PhotonCamera(cameraName); 
         PortForwarder.add(5800, cameraRemoteHost, 5800);
-        
+
+        genericCamera = new PhotonCamera(cameraName);
+        cameraHasTargets = false;
         heading = 0;
-        targetDist = 0;
-        cameraYaw = 0;
+        pipelineIndex = genericCamera.getPipelineIndex();
+        //Pipeline Index 0 -> Ball Detection
+        //Pipeline Index 1 -> AprilTag Detection
+
+        targetID = 0;
+        targetYaw = 0;
+        targetPitch = 0;
+
+        robotToCam = new Transform3d(new Translation3d(0,0,0), new Rotation3d(0,0,0));
+        photonPoseEstimator = new PhotonPoseEstimator(fieldLayout26, robotToCam);
         cameraX = 0;
         cameraY = 0;
-        cameraPitch = 0;
-        cameraFidID = -1;
-        cameraHasTargets = false;
-        targetDistanceMeters = 0;
-        pipelineIndex = genericCamera.getPipelineIndex();
+        cameraZ = 0;
+
         System.out.println("Camera Module Initialized (" + cameraName + "" + cameraRemoteHost + "");
-        
     }
 
     @Override
@@ -59,80 +84,46 @@ public class CameraModule extends SubsystemBase {
 
         heading = localRobotContainer.m_robotDrive.getHeading();
         Rotation2d gyroAngle = new Rotation2d(Constants.degreesToRadians * heading);
-
-        //Pipeline Index 0 -> Ball Detection
-        //Pipeline Index 1 -> AprilTag Detection
             
         List<PhotonPipelineResult> results = genericCamera.getAllUnreadResults();
         if(!results.isEmpty()){
             PhotonPipelineResult result = results.get(results.size() - 1);
             cameraHasTargets = result.hasTargets();
             if(cameraHasTargets){
-                PhotonTrackedTarget bestTarget = result.getBestTarget();
-                cameraFidID = bestTarget.getFiducialId();
-                cameraYaw = bestTarget.getYaw();
-                cameraPitch = bestTarget.getPitch();
-                targetDist = PhotonUtils.calculateDistanceToTargetMeters(
-                    cameraX, 
-                    targetDist, 
-                    cameraPitch, 
-                    targetDist);
-                
-                
-                //  AprilTag code
-                /*
-                cameraFidID = bestTarget.getFiducialId();
-                fieldToTarget2D = fieldLayout26.getTagPose(cameraFidID).get().toPose2d();
-                fieldToTarget3D = fieldLayout26.getTagPose(cameraFidID).get();
-                
-                targetDistanceMeters = PhotonUtils.calculateDistanceToTargetMeters(
-                    0.22225,
-                    fieldToTarget3D.getZ(),
-                    Constants.degreesToRadians * 15,
-                    Constants.degreesToRadians * cameraPitch);
+                robotPose = photonPoseEstimator.estimateCoprocMultiTagPose(genericCamera.getLatestResult());
+                if(!robotPose.isEmpty()) {
+                    cameraX = robotPose.get().estimatedPose.getX();
+                    cameraY = robotPose.get().estimatedPose.getY();
+                    cameraZ = robotPose.get().estimatedPose.getZ();
+                    // System.out.println("("+cameraX+","+cameraY+","+cameraZ+")");
+                }
 
-                CameraToTargetTranslation = PhotonUtils.estimateCameraToTargetTranslation(targetDistanceMeters, new Rotation2d(cameraYaw * Constants.degreesToRadians));
-                CameraToTarget = PhotonUtils.estimateCameraToTarget(CameraToTargetTranslation, fieldToTarget2D, gyroAngle);
-                cameraX = CameraToTarget.getX();
-                cameraY = CameraToTarget.getY();
-                */
+                PhotonTrackedTarget bestTarget = result.getBestTarget();
+                targetID = bestTarget.getFiducialId();
+                targetYaw = bestTarget.getYaw();
+                targetPitch = bestTarget.getPitch();
             
             } else {
-                cameraFidID = -1;
-                cameraYaw = 0;
-                cameraPitch = 0;
-                targetDistanceMeters = 0;
+                targetID = -1;
+                targetYaw = 0;
+                targetPitch = 0;
             }
         }
     }
 
-
-    //Limelight Functions
     public boolean checkHasTargets(){
         return cameraHasTargets;
     }
 
     public double getYaw(){
-        return cameraYaw;
+        return targetYaw;
     }
     public double getPitch(){
-        return cameraPitch;
-    }
-
-    public double getXOffset(){
-        return cameraX;
-    }
-
-    public double getYOffset(){
-        return cameraY;
+        return targetPitch;
     }
 
     public int getTargetID() {
-        return cameraFidID;
-    }
-
-    public double getTargetDist() {
-        return targetDistanceMeters;
+        return targetID;
     }
 
     public int getPipelineIndex() {
@@ -146,6 +137,7 @@ public class CameraModule extends SubsystemBase {
             genericCamera.setPipelineIndex(0);
         }
     }
+
 }
 
 

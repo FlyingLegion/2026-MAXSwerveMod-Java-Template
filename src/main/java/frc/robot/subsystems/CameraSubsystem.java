@@ -16,8 +16,8 @@ import frc.robot.Constants.DriveConstants;
 
 public class CameraSubsystem extends SubsystemBase {  
 
-    private final CameraModule OrangeCamera;
-    private final CameraModule WhiteCamera;
+    // private final CameraModule OrangeCamera;
+    // private final CameraModule WhiteCamera;
     private final CameraModule YellowCamera;
     private final CameraModule BlackCamera;
     public final CameraModule ArduCam;
@@ -31,15 +31,15 @@ public class CameraSubsystem extends SubsystemBase {
             "photonvision",
             localRobotContainer);
 
-        OrangeCamera = new CameraModule(
-            "Orange", 
-            "photonvisionow",
-            localRobotContainer);
+        // OrangeCamera = new CameraModule(
+        //     "Orange", 
+        //     "photonvisionow",
+        //     localRobotContainer);
     
-        WhiteCamera = new CameraModule(
-            "White", 
-            "photonvisionow",
-            localRobotContainer);
+        // WhiteCamera = new CameraModule(
+        //     "White", 
+        //     "photonvisionow",
+        //     localRobotContainer);
 
         YellowCamera = new CameraModule(
             "Yellow", 
