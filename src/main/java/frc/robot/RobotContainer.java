@@ -43,7 +43,7 @@ public class RobotContainer {
   // The driver's controller
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
   //CommandXboxController m_opController = new CommandXboxController(OIConstants.kOperatorControllerPort);
-  PIDController pidRotationController = new PIDController(0.005, 0, 1); //Glass program Overides Coded PIDs
+  PIDController pidRotationController = new PIDController(0.004, 0, 0); //Glass program Overides Coded PIDs
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.

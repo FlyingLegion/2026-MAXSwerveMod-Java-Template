@@ -1,8 +1,5 @@
 package frc.robot.subsystems;
 import java.util.List;
-
-//Make a function that you pass it the camera to use and it gets all the values set - Do at some point because it will bevery good
-
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -34,8 +31,8 @@ public class CameraModule extends SubsystemBase {
     public int pipelineIndex;
     public double targetDist;
     
-
-    public static final AprilTagFieldLayout fieldLayout25 = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded); //loads the apriltag layout
+    //AprilTag Map (VERY IMPORTANT)
+    public static final AprilTagFieldLayout fieldLayout26 = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded); //loads the apriltag layout
 
     public CameraModule(String cameraName, String cameraRemoteHost, RobotContainer m_robotContainer){
         localRobotContainer = m_robotContainer;
@@ -50,7 +47,7 @@ public class CameraModule extends SubsystemBase {
         cameraPitch = 0;
         cameraFidID = -1;
         cameraHasTargets = false;
-        // targetDistanceMeters = 0;
+        targetDistanceMeters = 0;
         pipelineIndex = genericCamera.getPipelineIndex();
         System.out.println("Camera Module Initialized (" + cameraName + "" + cameraRemoteHost + "");
         
@@ -63,11 +60,8 @@ public class CameraModule extends SubsystemBase {
         heading = localRobotContainer.m_robotDrive.getHeading();
         Rotation2d gyroAngle = new Rotation2d(Constants.degreesToRadians * heading);
 
-        // if (pipelineIndex == 0) {
-        //     System.out.println("Using Ball Detection ");
-        // } else if (pipelineIndex == 1) {
-        //     System.out.println("Using AprilTag Detection ");
-        // } 
+        //Pipeline Index 0 -> Ball Detection
+        //Pipeline Index 1 -> AprilTag Detection
             
         List<PhotonPipelineResult> results = genericCamera.getAllUnreadResults();
         if(!results.isEmpty()){
@@ -75,6 +69,7 @@ public class CameraModule extends SubsystemBase {
             cameraHasTargets = result.hasTargets();
             if(cameraHasTargets){
                 PhotonTrackedTarget bestTarget = result.getBestTarget();
+                cameraFidID = bestTarget.getFiducialId();
                 cameraYaw = bestTarget.getYaw();
                 cameraPitch = bestTarget.getPitch();
                 targetDist = PhotonUtils.calculateDistanceToTargetMeters(
@@ -87,14 +82,14 @@ public class CameraModule extends SubsystemBase {
                 //  AprilTag code
                 /*
                 cameraFidID = bestTarget.getFiducialId();
-                fieldToTarget2D = fieldLayout25.getTagPose(cameraFidID).get().toPose2d();
-                fieldToTarget3D = fieldLayout25.getTagPose(cameraFidID).get();
+                fieldToTarget2D = fieldLayout26.getTagPose(cameraFidID).get().toPose2d();
+                fieldToTarget3D = fieldLayout26.getTagPose(cameraFidID).get();
                 
                 targetDistanceMeters = PhotonUtils.calculateDistanceToTargetMeters(
-                    0.22225, //camera height; must correct
-                    fieldToTarget3D.getZ(), //test target height
-                    Constants.degreesToRadians * 15, //camera pitch - we are currently perpendicular to the ground; must change
-                    Constants.degreesToRadians * cameraPitch); //Pitch of target
+                    0.22225,
+                    fieldToTarget3D.getZ(),
+                    Constants.degreesToRadians * 15,
+                    Constants.degreesToRadians * cameraPitch);
 
                 CameraToTargetTranslation = PhotonUtils.estimateCameraToTargetTranslation(targetDistanceMeters, new Rotation2d(cameraYaw * Constants.degreesToRadians));
                 CameraToTarget = PhotonUtils.estimateCameraToTarget(CameraToTargetTranslation, fieldToTarget2D, gyroAngle);
@@ -108,9 +103,6 @@ public class CameraModule extends SubsystemBase {
                 cameraPitch = 0;
                 targetDistanceMeters = 0;
             }
-            // System.out.println("cameraYaw: " + cameraYaw);
-            // System.out.println("cameraPitch: " + cameraPitch);
-            // System.out.println("Camera Has Targets: " + cameraHasTargets);
         }
     }
 
@@ -151,7 +143,7 @@ public class CameraModule extends SubsystemBase {
         if (pipelineIndex == 0) {
             genericCamera.setPipelineIndex(1);
         } else if (pipelineIndex == 1) {
-             genericCamera.setPipelineIndex(0);
+            genericCamera.setPipelineIndex(0);
         }
     }
 }
