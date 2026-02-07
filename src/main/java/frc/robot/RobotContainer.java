@@ -18,13 +18,16 @@ import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
-import frc.robot.subsystems.DriveSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import java.util.List;
+//subsystems
+import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.CameraSubsystem;
+import frc.robot.subsystems.CameraModule;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -34,10 +37,13 @@ import java.util.List;
  */
 public class RobotContainer {
   // The robot's subsystems
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem();
+  public final DriveSubsystem m_robotDrive = new DriveSubsystem();
+  public final CameraSubsystem m_cameraSubsystem = new CameraSubsystem(this);
 
   // The driver's controller
-  XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
+  //CommandXboxController m_opController = new CommandXboxController(OIConstants.kOperatorControllerPort);
+  PIDController pidRotationController = new PIDController(0.004, 0, 0); //Glass program Overides Coded PIDs
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -68,17 +74,31 @@ public class RobotContainer {
    * passing it to a
    * {@link JoystickButton}.
    */
-  private void configureButtonBindings() {
-    new JoystickButton(m_driverController, Button.kR1.value)
+private void configureButtonBindings() {
+    m_driverController.rightTrigger()
         .whileTrue(new RunCommand(
             () -> m_robotDrive.setX(),
             m_robotDrive));
-
-    new JoystickButton(m_driverController, XboxController.Button.kStart.value)
-        .onTrue(new InstantCommand(
-            () -> m_robotDrive.zeroHeading(),
+            
+    m_driverController.leftBumper()
+        .whileTrue(new RunCommand(
+            () -> m_robotDrive.drive(0.15, 0.0, 0.0 ,false),
             m_robotDrive));
-  }
+    
+    m_driverController.rightBumper()
+        .whileTrue(new RunCommand(
+        () ->  m_robotDrive.drive(-MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
+                                 -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband), 
+                                 pidRotationController.calculate(m_cameraSubsystem.ArduCam.cameraYaw, 0 ), 
+                                 false),
+             m_robotDrive));
+    
+    /* Manual reset for robot orientation */
+    m_driverController.start()
+        .onTrue(m_robotDrive.zeroHeadingCommand());
+    
+}
+
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
