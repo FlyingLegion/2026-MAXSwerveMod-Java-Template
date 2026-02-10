@@ -166,4 +166,8 @@ private void configureButtonBindings() {
     Translation2d polar = new Translation2d(r,theta);
     return polar;
   }
+  
+  public double translationMagnitude(Translation2d vector) {
+    return Math.sqrt(Math.pow(vector.getX(),2) + Math.pow(vector.getY(),2));
+  }
 }
