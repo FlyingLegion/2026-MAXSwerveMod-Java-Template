@@ -3,6 +3,8 @@ import java.lang.StackWalker.Option;
 import java.util.List;
 import java.util.Optional;
 
+import javax.net.ssl.CertPathTrustManagerParameters;
+
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -105,6 +107,7 @@ public class CameraModule extends SubsystemBase {
                     cameraPos = new Translation2d(cameraX, cameraY);
                     // System.out.println("("+cameraX+","+cameraY+","+cameraZ+")");
                 } else {
+                    canGetPos = false;
                     cameraX = 0;
                     cameraY = 0;
                     cameraZ = 0;
