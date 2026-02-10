@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -89,7 +90,6 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    SmartDashboard.putData("PID Rotation Controller: ", m_robotContainer.pidRotationController);
   }
 
   @Override
@@ -100,5 +100,8 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during test mode. */
   @Override
-  public void testPeriodic() {}
+  public void testPeriodic() {
+    System.out.println( m_robotContainer.cartesianToPolar( new Translation2d( Math.sqrt(3) / 2, 0.5)));
+    System.out.println( m_robotContainer.polarToCartesian( new Translation2d( 1, Math.PI/6)));
+  }
 }

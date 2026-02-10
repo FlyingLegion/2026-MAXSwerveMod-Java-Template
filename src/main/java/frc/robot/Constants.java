@@ -106,4 +106,10 @@ public final class Constants {
   public static final class CameraConstants{
     
   }
+
+  public static final class FieldConstants{
+    //ALL MEASURES IN METERS
+    public static final Translation2d blueGoal = new Translation2d(4.611624,4.021328);
+    public static final Translation2d redGoal = new Translation2d(11.901424,4.021328);
+  }
 }
