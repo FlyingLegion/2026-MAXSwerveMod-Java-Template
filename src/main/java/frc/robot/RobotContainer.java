@@ -15,6 +15,7 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
@@ -29,6 +30,7 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.CameraSubsystem;
 import frc.robot.subsystems.CameraModule;
 
+
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -39,7 +41,7 @@ public class RobotContainer {
   // The robot's subsystems
   public final DriveSubsystem m_robotDrive = new DriveSubsystem();
   public final CameraSubsystem m_cameraSubsystem = new CameraSubsystem(this);
-
+ 
   // The driver's controller
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
   //CommandXboxController m_opController = new CommandXboxController(OIConstants.kOperatorControllerPort);
@@ -64,6 +66,8 @@ public class RobotContainer {
                 true),
             m_robotDrive));
   }
+
+
 
   /**
    * Use this method to define your button->command mappings. Buttons can be

@@ -21,8 +21,33 @@
     },
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/PID Rotation Controller: ": "PIDController",
       "/SmartDashboard/PhotonAlerts": "Alerts"
+    },
+    "windows": {
+      "/SmartDashboard/Field": {
+        "Robot": {
+          "arrowColor": [
+            255.0,
+            157.5,
+            0.0,
+            255.0
+          ]
+        },
+        "bottom": 1914,
+        "builtin": "",
+        "height": 8.069275856018066,
+        "image": "C:\\Users\\hcrt3\\Downloads\\2026-field.png",
+        "left": 245,
+        "right": 3942,
+        "top": 118,
+        "width": 16.54119300842285,
+        "window": {
+          "name": "Rebuilt-2026",
+          "visible": true
+        }
+      }
     }
   },
   "NetworkTables Info": {
@@ -87,7 +112,7 @@
             0.05999999865889549,
             0.9399999976158142
           ],
-          "height": 693,
+          "height": -12,
           "series": [
             {
               "color": [

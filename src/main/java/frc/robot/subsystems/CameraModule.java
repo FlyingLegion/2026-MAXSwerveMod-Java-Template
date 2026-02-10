@@ -81,7 +81,7 @@ public class CameraModule extends SubsystemBase {
     @Override
     public void periodic(){
         SmartDashboard.putString("Camera Modules", "Running");
-
+        
         heading = localRobotContainer.m_robotDrive.getHeading();
         Rotation2d gyroAngle = new Rotation2d(Constants.degreesToRadians * heading);
             
@@ -96,8 +96,9 @@ public class CameraModule extends SubsystemBase {
                     cameraY = robotPose.get().estimatedPose.getY();
                     cameraZ = robotPose.get().estimatedPose.getZ();
                     // System.out.println("("+cameraX+","+cameraY+","+cameraZ+")");
+                    // This updates the robot's position relative to the Camera
                 }
-
+                
                 PhotonTrackedTarget bestTarget = result.getBestTarget();
                 targetID = bestTarget.getFiducialId();
                 targetYaw = bestTarget.getYaw();
@@ -109,6 +110,10 @@ public class CameraModule extends SubsystemBase {
                 targetPitch = 0;
             }
         }
+    }
+
+    public Pose2d getPose2dValues(){
+        return new Pose2d(cameraX, cameraY, new Rotation2d(0)); // To do: please supply the rotation and calculate pose2d globally instead of Peridic
     }
 
     public boolean checkHasTargets(){
