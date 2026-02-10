@@ -3,6 +3,8 @@ import java.lang.StackWalker.Option;
 import java.util.List;
 import java.util.Optional;
 
+import javax.net.ssl.CertPathTrustManagerParameters;
+
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -26,15 +28,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Robot;
-import frc.robot.RobotContainer;
 
 
 public class CameraModule extends SubsystemBase {
     //Basic Things
-    public RobotContainer localRobotContainer;
     public PhotonCamera genericCamera;
     public boolean cameraHasTargets;
-    public double heading;
+    public boolean canGetPos;
     public int pipelineIndex;
 
     //Target Information
@@ -46,21 +46,22 @@ public class CameraModule extends SubsystemBase {
     public Transform3d robotToCam;
     public PhotonPoseEstimator photonPoseEstimator;
     public Optional<EstimatedRobotPose> robotPose;
+
     //field relative XYZ positions
     public double cameraX;
     public double cameraY;
-    public double cameraZ;
+    public Translation2d cameraPos;
+    public Translation2d vectorOffset;
     
     //AprilTag Map (VERY IMPORTANT)
     public static final AprilTagFieldLayout fieldLayout26 = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded); //loads the apriltag layout
 
-    public CameraModule(String cameraName, String cameraRemoteHost, RobotContainer m_robotContainer){
-        localRobotContainer = m_robotContainer;
+    public CameraModule(String cameraName, String cameraRemoteHost, Translation2d vectorMult){
         PortForwarder.add(5800, cameraRemoteHost, 5800);
 
         genericCamera = new PhotonCamera(cameraName);
         cameraHasTargets = false;
-        heading = 0;
+        canGetPos = false;
         pipelineIndex = genericCamera.getPipelineIndex();
         //Pipeline Index 0 -> Ball Detection
         //Pipeline Index 1 -> AprilTag Detection
@@ -73,7 +74,8 @@ public class CameraModule extends SubsystemBase {
         photonPoseEstimator = new PhotonPoseEstimator(fieldLayout26, robotToCam);
         cameraX = 0;
         cameraY = 0;
-        cameraZ = 0;
+        cameraPos = new Translation2d(0, 0);
+        vectorOffset = vectorMult.times(Constants.CameraConstants.cornerRadius);
 
         System.out.println("Camera Module Initialized (" + cameraName + "" + cameraRemoteHost + "");
     }
@@ -81,9 +83,6 @@ public class CameraModule extends SubsystemBase {
     @Override
     public void periodic(){
         SmartDashboard.putString("Camera Modules", "Running");
-        
-        heading = localRobotContainer.m_robotDrive.getHeading();
-        Rotation2d gyroAngle = new Rotation2d(Constants.degreesToRadians * heading);
             
         List<PhotonPipelineResult> results = genericCamera.getAllUnreadResults();
         if(!results.isEmpty()){
@@ -91,12 +90,19 @@ public class CameraModule extends SubsystemBase {
             cameraHasTargets = result.hasTargets();
             if(cameraHasTargets){
                 robotPose = photonPoseEstimator.estimateCoprocMultiTagPose(genericCamera.getLatestResult());
+
                 if(!robotPose.isEmpty()) {
-                    cameraX = robotPose.get().estimatedPose.getX();
-                    cameraY = robotPose.get().estimatedPose.getY();
-                    cameraZ = robotPose.get().estimatedPose.getZ();
+                    canGetPos = true;
+                    cameraX = robotPose.get().estimatedPose.getX() - vectorOffset.getX();
+                    cameraY = robotPose.get().estimatedPose.getY() - vectorOffset.getY();
+                    cameraPos = new Translation2d(cameraX, cameraY).plus(vectorOffset);
                     // System.out.println("("+cameraX+","+cameraY+","+cameraZ+")");
                     // This updates the robot's position relative to the Camera
+                } else {
+                    canGetPos = false;
+                    cameraX = 0;
+                    cameraY = 0;
+                    cameraPos = new Translation2d(0,0);
                 }
                 
                 PhotonTrackedTarget bestTarget = result.getBestTarget();
@@ -120,6 +126,10 @@ public class CameraModule extends SubsystemBase {
         return cameraHasTargets;
     }
 
+    public boolean checkCanGetPos() {
+        return canGetPos;
+    }
+
     public double getYaw(){
         return targetYaw;
     }
@@ -133,6 +143,16 @@ public class CameraModule extends SubsystemBase {
 
     public int getPipelineIndex() {
         return genericCamera.getPipelineIndex();
+    }
+
+    public double getCameraX() {
+        return cameraX;
+    }
+    public double getCameraY() {
+        return cameraY;
+    }
+    public Translation2d getCameraPos() {
+        return cameraPos;
     }
 
     public void switchPipelineIndex(){

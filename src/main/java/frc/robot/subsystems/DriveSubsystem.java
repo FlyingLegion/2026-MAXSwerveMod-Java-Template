@@ -22,9 +22,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer;
 
 
 public class DriveSubsystem extends SubsystemBase {
+  public RobotContainer localRobotContainer;
   // Create MAXSwerveModules
   
   private final MAXSwerveModule m_frontLeft = new MAXSwerveModule(
@@ -46,8 +48,7 @@ public class DriveSubsystem extends SubsystemBase {
       DriveConstants.kRearRightDrivingCanId,
       DriveConstants.kRearRightTurningCanId,
       DriveConstants.kBackRightChassisAngularOffset);
-  
-   public final Field2d m_field = new Field2d(); //Created for the birds eye view to be used in glass
+
 
 
   // The navX sensor
@@ -81,9 +82,6 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-        SmartDashboard.putData("Field" , m_field);
-        // m_field.setRobotPose(m_odometry.getPoseMeters());
-        m_field.setRobotPose(new Pose2d(1, 2, new Rotation2d(5)));
   }
 
   /**
@@ -93,7 +91,6 @@ public class DriveSubsystem extends SubsystemBase {
   public Pose2d getPose() {
     return m_odometry.getPoseMeters();
   }
-
   /**
    * Resets the odometry to the specified pose.
    *

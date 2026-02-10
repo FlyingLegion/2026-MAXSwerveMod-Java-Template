@@ -104,12 +104,25 @@ public final class Constants {
     public static final double kFreeSpeedRpm = 5676;
   }
   public static final class CameraConstants{
-    
+    //METERS
+    public static final double cameraHeight = 0.2;
+    public static final double cornerRadius = 0.4953;
+    public static final Translation2d blackVectorMult = new Translation2d(1,1);
+    public static final Translation2d yellowVectorMult = new Translation2d(-1,1);
+    public static final Translation2d orangeVectorMult = new Translation2d(-1,-1);
+    public static final Translation2d whiteVectorMult = new Translation2d(1,-1);
+    // robot orientation (?)
   }
 
   public static final class FieldConstants{
     //ALL MEASURES IN METERS
-    public static final Translation2d leftGoal = new Translation2d(4.611624,4.021328);
-    public static final Translation2d rightGoal = new Translation2d(11.901424,4.021328);
+    public static final Translation2d blueGoal = new Translation2d(4.611624,4.021328);
+    public static final Translation2d redGoal = new Translation2d(11.901424,4.021328);
   }
+
+
+  public double translationMagnitude(Translation2d vector) {
+    return Math.sqrt(Math.pow(vector.getX(),2) + Math.pow(vector.getY(),2));
+  }
+
 }
