@@ -1,20 +1,22 @@
 {
   "NetworkTables": {
-    "Persistent Values": {
-      "open": false
-    },
     "Retained Values": {
       "open": false
     },
+    "precision": 3,
     "transitory": {
+      "Shuffleboard": {
+        ".recording": {
+          "open": true
+        }
+      },
       "SmartDashboard": {
         "PID Rotation Controller: ": {
           "open": true
-        },
-        "open": true
+        }
       },
       "photonvision": {
-        "Orange_Pi_Cam": {
+        "Black": {
           "open": true
         }
       }
@@ -22,6 +24,9 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/FieldBlack": "Field2d",
+      "/SmartDashboard/FieldOrange_Pi_Cam": "Field2d",
+      "/SmartDashboard/FieldYellow": "Field2d",
       "/SmartDashboard/PID Rotation Controller: ": "PIDController",
       "/SmartDashboard/PhotonAlerts": "Alerts"
     },
@@ -44,7 +49,32 @@
         "top": 118,
         "width": 16.54119300842285,
         "window": {
-          "name": "Rebuilt-2026",
+          "name": "Rebuilt-2026"
+        }
+      },
+      "/SmartDashboard/FieldBlack": {
+        "bottom": 1914,
+        "builtin": "",
+        "height": 8.069275856018066,
+        "image": "C:\\Users\\hcrt3\\Downloads\\2026-field.png",
+        "left": 245,
+        "right": 3942,
+        "top": 118,
+        "width": 16.54119300842285,
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/FieldYellow": {
+        "bottom": 1914,
+        "builtin": "",
+        "height": 8.069275856018066,
+        "image": "C:\\Users\\hcrt3\\Downloads\\2026-field.png",
+        "left": 245,
+        "right": 3942,
+        "top": 118,
+        "width": 16.54119300842285,
+        "window": {
           "visible": true
         }
       }
@@ -54,11 +84,28 @@
     "Connections": {
       "open": true
     },
+    "photonvision@4": {
+      "Publishers": {
+        "open": true
+      },
+      "Subscribers": {
+        "open": true
+      }
+    },
+    "photonvisionYB@1": {
+      "Publishers": {
+        "open": true
+      }
+    },
     "visible": true
   },
   "NetworkTables Settings": {
     "mode": "Client (NT4)",
-    "serverTeam": "3635"
+    "serverTeam": "3635",
+    "visible": false
+  },
+  "NetworkTables View": {
+    "visible": false
   },
   "Plots": {
     "Plot <0>": {
@@ -112,7 +159,7 @@
             0.05999999865889549,
             0.9399999976158142
           ],
-          "height": 0,
+          "height": 622,
           "series": [
             {
               "color": [
@@ -136,7 +183,8 @@
         }
       ],
       "window": {
-        "name": "Rotation PID"
+        "name": "Rotation PID",
+        "visible": false
       }
     }
   }

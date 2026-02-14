@@ -89,13 +89,13 @@ private void configureButtonBindings() {
             () -> m_robotDrive.drive(0.15, 0.0, 0.0 ,false),
             m_robotDrive));
     
-    m_driverController.rightBumper()
-        .whileTrue(new RunCommand(
-        () ->  m_robotDrive.drive(-MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
-                                 -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband), 
-                                 pidRotationController.calculate(m_cameraSubsystem.ArduCam.targetYaw, 0 ), 
-                                 false),
-             m_robotDrive));
+    // m_driverController.rightBumper()
+    //     .whileTrue(new RunCommand(
+    //     () ->  m_robotDrive.drive(-MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
+    //                               -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband), 
+    //                               pidRotationController.calculate(m_cameraSubsystem.ArduCam.targetYaw, 0), 
+    //                               false),
+    //          m_robotDrive));
     
     /* Manual reset for robot orientation */
     m_driverController.start()

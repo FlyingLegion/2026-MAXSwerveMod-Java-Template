@@ -4,7 +4,7 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -106,11 +106,13 @@ public final class Constants {
   public static final class CameraConstants{
     //METERS
     public static final double cameraHeight = 0.2;
-    public static final double cornerRadius = 0.4953;
-    public static final Translation2d blackVectorMult = new Translation2d(1,1);
-    public static final Translation2d yellowVectorMult = new Translation2d(-1,1);
-    public static final Translation2d orangeVectorMult = new Translation2d(-1,-1);
-    public static final Translation2d whiteVectorMult = new Translation2d(1,-1);
+    public static final double cornerRadius = 0.4939; //circumscibed radius of the robot
+    public static final double robotRadius = 0.3493; //inscribed radius of the robot
+    public static final Transform3d orangePICameraOffset = new Transform3d(new Translation3d(0,robotRadius,13.97), new Rotation3d(0, -10*degreesToRadians, 0));
+    public static final Transform3d yellowCameraOffset = new Transform3d(new Translation3d(robotRadius,-robotRadius,cameraHeight), new Rotation3d(0, 15*degreesToRadians, -Math.PI/4));
+    public static final Transform3d blackCameraOffset = new Transform3d(new Translation3d(-robotRadius,-robotRadius,cameraHeight), new Rotation3d(0, 15*degreesToRadians, -3*Math.PI/4));
+    public static final Transform3d orangeCameraOffset = new Transform3d(new Translation3d(robotRadius,robotRadius,cameraHeight), new Rotation3d(0, 15*degreesToRadians, Math.PI/4));
+    public static final Transform3d whiteCameraOffset = new Transform3d(new Translation3d(-robotRadius,robotRadius,cameraHeight), new Rotation3d(0, 15*degreesToRadians, 3*Math.PI/4));
     // robot orientation (?)
   }
 

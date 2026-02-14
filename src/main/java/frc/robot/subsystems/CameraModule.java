@@ -15,23 +15,20 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.net.PortForwarder;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
 
 
 public class CameraModule extends SubsystemBase {
     //Basic Things
+    public RobotContainer localRobotContainer;
     public PhotonCamera genericCamera;
     public boolean cameraHasTargets;
     public boolean canGetPos;
@@ -43,7 +40,6 @@ public class CameraModule extends SubsystemBase {
     public double targetPitch;
 
     //position things
-    public Transform3d robotToCam;
     public PhotonPoseEstimator photonPoseEstimator;
     public Optional<EstimatedRobotPose> robotPose;
 
@@ -51,12 +47,16 @@ public class CameraModule extends SubsystemBase {
     public double cameraX;
     public double cameraY;
     public Translation2d cameraPos;
-    public Translation2d vectorOffset;
-    
+    public Rotation3d cameraRot;
+    public double cameraHeading;
+
     //AprilTag Map (VERY IMPORTANT)
     public static final AprilTagFieldLayout fieldLayout26 = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded); //loads the apriltag layout
-
-    public CameraModule(String cameraName, String cameraRemoteHost, Translation2d vectorMult){
+    public final Field2d m_camField = new Field2d(); 
+    
+    public CameraModule(String cameraName, String cameraRemoteHost, Transform3d robotToCam, RobotContainer m_robotContainer){
+        localRobotContainer = m_robotContainer;
+        
         PortForwarder.add(5800, cameraRemoteHost, 5800);
 
         genericCamera = new PhotonCamera(cameraName);
@@ -70,12 +70,12 @@ public class CameraModule extends SubsystemBase {
         targetYaw = 0;
         targetPitch = 0;
 
-        robotToCam = new Transform3d(new Translation3d(0,0,0), new Rotation3d(0,0,0));
+        // robotToCam = new Transform3d(new Translation3d(0,0,0), new Rotation3d(0,0,0)); //overrode to 0 for debug
         photonPoseEstimator = new PhotonPoseEstimator(fieldLayout26, robotToCam);
         cameraX = 0;
         cameraY = 0;
         cameraPos = new Translation2d(0, 0);
-        vectorOffset = vectorMult.times(Constants.CameraConstants.cornerRadius);
+        cameraRot = new Rotation3d(0, 0, 0);
 
         System.out.println("Camera Module Initialized (" + cameraName + "" + cameraRemoteHost + "");
     }
@@ -83,26 +83,39 @@ public class CameraModule extends SubsystemBase {
     @Override
     public void periodic(){
         SmartDashboard.putString("Camera Modules", "Running");
-            
+        SmartDashboard.putData("Field" + genericCamera.getName(), m_camField);
+
+
+
         List<PhotonPipelineResult> results = genericCamera.getAllUnreadResults();
         if(!results.isEmpty()){
             PhotonPipelineResult result = results.get(results.size() - 1);
             cameraHasTargets = result.hasTargets();
             if(cameraHasTargets){
-                robotPose = photonPoseEstimator.estimateCoprocMultiTagPose(genericCamera.getLatestResult());
+                robotPose = photonPoseEstimator.estimateCoprocMultiTagPose(result);
 
                 if(!robotPose.isEmpty()) {
                     canGetPos = true;
-                    cameraX = robotPose.get().estimatedPose.getX() - vectorOffset.getX();
-                    cameraY = robotPose.get().estimatedPose.getY() - vectorOffset.getY();
-                    cameraPos = new Translation2d(cameraX, cameraY).plus(vectorOffset);
-                    // System.out.println("("+cameraX+","+cameraY+","+cameraZ+")");
-                    // This updates the robot's position relative to the Camera
+                    cameraX = robotPose.get().estimatedPose.getX();
+                    cameraY = robotPose.get().estimatedPose.getY();
+                    cameraRot = robotPose.get().estimatedPose.getRotation();
+                    cameraHeading = cameraRot.getZ();
+                    cameraPos = new Translation2d(cameraX, cameraY);//.minus(getCenterOffset(cameraRot));
+                    //SmartDashboard.putString("robotPose3d " + genericCamera.getName(), robotPose.get().estimatedPose.toString());
+                    //SmartDashboard.putString("robotPose2d " + genericCamera.getName(), robotPose.get().estimatedPose.toPose2d().toString());
+                    //SmartDashboard.putString("robotRot " + genericCamera.getName(), robotPose.get().estimatedPose.getRotation().toString());
+                    //SmartDashboard.putNumber("robotHeadingRad " + genericCamera.getName(), cameraHeading);
+                    //SmartDashboard.putNumber("robotHeadingDeg " + genericCamera.getName(), cameraHeading*Constants.radiansToDegrees);
+                    //m_camField.setRobotPose(robotPose.get().estimatedPose.toPose2d());
+                    m_camField.setRobotPose(new Pose2d(cameraX, cameraY, new Rotation2d(cameraHeading)));
+
                 } else {
                     canGetPos = false;
                     cameraX = 0;
                     cameraY = 0;
+                    cameraRot = new Rotation3d(0,0,0);
                     cameraPos = new Translation2d(0,0);
+                    m_camField.setRobotPose(new Pose2d(0,0, new Rotation2d(0.5,0.5)));
                 }
                 
                 PhotonTrackedTarget bestTarget = result.getBestTarget();
@@ -154,6 +167,11 @@ public class CameraModule extends SubsystemBase {
     public Translation2d getCameraPos() {
         return cameraPos;
     }
+    public Translation2d getCenterOffset(Rotation3d rot){
+        double theta = rot.getY();
+        Translation2d cameraOffset = localRobotContainer.polarToCartesian(new Translation2d(Constants.CameraConstants.cornerRadius, theta));
+        return cameraOffset;
+    } 
 
     public void switchPipelineIndex(){
         if (pipelineIndex == 0) {

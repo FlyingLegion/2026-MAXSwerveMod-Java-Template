@@ -1,5 +1,5 @@
 package frc.robot.subsystems;
-import java.util.List;
+import java.util.*;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
@@ -9,25 +9,26 @@ import edu.wpi.first.apriltag.*;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.smartdashboard.*;
+import edu.wpi.first.wpilibj.shuffleboard.*;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import frc.robot.*;
-import java.util.ArrayList;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 
 
 public class CameraSubsystem extends SubsystemBase {  
-    public RobotContainer localRobotContainer;
+    private RobotContainer localRobotContainer;
 
-    // private final CameraModule OrangeCamera;
-    // private final CameraModule WhiteCamera;
+    private final CameraModule OrangeCamera;
+    private final CameraModule WhiteCamera;
     private final CameraModule YellowCamera;
     private final CameraModule BlackCamera;
-    public final CameraModule ArduCam;
+    // public final CameraModule ArduCam;
     //Arraylist of raspberry pi cameras
     public ArrayList<CameraModule> rpiCams = new ArrayList<CameraModule>();
-    public final Field2d m_field = new Field2d(); //Created for the birds eye view to be used in glass
 
     //Average Robot Position
     public double robotX;
@@ -36,38 +37,49 @@ public class CameraSubsystem extends SubsystemBase {
     public double distanceToGoal;
     public Translation2d diffToRedGoal;
     public Translation2d diffToBlueGoal;
+
+
+    //GLASS VARIABLES
+    public final Field2d m_field = new Field2d(); //Field Widget
+    private static ShuffleboardTab cameraTab;
+    
     
     public CameraSubsystem(RobotContainer m_robotContainer) {
         localRobotContainer = m_robotContainer;
         System.out.println("Camera Subsystem Initialized");
 
-        ArduCam = new CameraModule(
-            "Orange_Pi_Cam",
-            "photonvision",
-            new Translation2d(0,0));
+        // ArduCam = new CameraModule(
+        //     "Orange_Pi_Cam",
+        //     "photonvision",
+        //     Constants.CameraConstants.orangePICameraOffset,
+        //     m_robotContainer);
 
-        // OrangeCamera = new CameraModule(
-        //      "Orange", 
-        //      "photonvisionow",
-        //      Constants.CameraConstants.orangeVectorMult);
+        OrangeCamera = new CameraModule(
+            "Orange", 
+            "photonvisionow",
+            Constants.CameraConstants.orangeCameraOffset,
+            m_robotContainer);
     
-        // WhiteCamera = new CameraModule(
-        //      "White", 
-        //      "photonvisionow",
-        //      Constants.CameraConstants.whiteVectorMult);
+        WhiteCamera = new CameraModule(
+            "White", 
+            "photonvisionow",
+            Constants.CameraConstants.whiteCameraOffset,
+            m_robotContainer);
 
         YellowCamera = new CameraModule(
             "Yellow", 
             "photonvisionyb",
-            Constants.CameraConstants.yellowVectorMult);
+            Constants.CameraConstants.yellowCameraOffset,
+            m_robotContainer);
 
         BlackCamera = new CameraModule(
             "Black", 
             "photonvisionyb",
-            Constants.CameraConstants.blackVectorMult);
+            Constants.CameraConstants.blackCameraOffset,
+            m_robotContainer);
 
-        // rpiCams.add(OrangeCamera);
-        // rpiCams.add(WhiteCamera);
+        rpiCams.add(OrangeCamera);
+        rpiCams.add(WhiteCamera);
         rpiCams.add(YellowCamera);
         rpiCams.add(BlackCamera);
     }
@@ -85,18 +97,39 @@ public class CameraSubsystem extends SubsystemBase {
             polar = localRobotContainer.cartesianToPolar(diffToRedGoal);
         }
 
+
         SmartDashboard.putData("Field", m_field);
+
+
         //rotation is read in radians
-        m_field.setRobotPose(new Pose2d(getRobotPos(), new Rotation2d(localRobotContainer.m_robotDrive.getHeading() * Constants.degreesToRadians)));
+        m_field.setRobotPose(new Pose2d(getRobotPos(), new Rotation2d((localRobotContainer.m_robotDrive.getHeading()-180) * Constants.degreesToRadians)));
+
         // System.out.println("X,Y Averaged Positions: ("+getRobotX()+","+getRobotY()+")");
         // System.out.println("X,Y Averaged Translation: ("+getRobotPos().getX()+","+getRobotPos().getY()+")");
         // System.out.println("r,θ in relation to nearest goal: ("+polar.getX()+","+polar.getY()+")");
-
-        //make translation to coordinate thing
     }
 
     public void switchPipelineIndex(){
-        ArduCam.switchPipelineIndex();
+        // ArduCam.switchPipelineIndex();
+    }
+
+    public void loadShuffleboardTabs() {
+        try {
+            cameraTab = Shuffleboard.getTab("Camera");
+            //test = cameraTab.add("testing", "").getEntry();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Shuffleboard Loading Error Caught");
+        }
+    }
+
+    public void sendShuffleboardInfo() {
+        try {
+            //test.setString("not a variable yet ;()");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Shuffleboard Variable Error");
+        }
     }
     
     public double getRobotX() {
