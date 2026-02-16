@@ -49,6 +49,8 @@ public class DriveSubsystem extends SubsystemBase {
       DriveConstants.kRearRightTurningCanId,
       DriveConstants.kBackRightChassisAngularOffset);
 
+  public final Field2d m_field = new Field2d(); //Field Widget
+
 
 
   // The navX sensor
@@ -82,6 +84,9 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
+
+    SmartDashboard.putData("FieldDrive", m_field);
+    m_field.setRobotPose(this.getPose());
   }
 
   /**
@@ -91,6 +96,7 @@ public class DriveSubsystem extends SubsystemBase {
   public Pose2d getPose() {
     return m_odometry.getPoseMeters();
   }
+
   /**
    * Resets the odometry to the specified pose.
    *
@@ -106,6 +112,20 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
         },
         pose);
+    System.out.println("Reset Odometry: " + pose.toString());
+  }
+
+  public void resetOdometryPose(Pose2d pose) {
+    m_odometry.resetPose(pose);
+    System.out.println("Reset Od. Pose: " + pose.toString());
+  }
+
+  public Command resetOdometryPoseCommand(Pose2d pose) {
+    return this.runOnce(() -> resetOdometryPose(pose));
+  }
+
+  public Command resetOdometryCommand(Pose2d pose) {
+    return this.runOnce(() -> resetOdometry(pose));
   }
 
   /**

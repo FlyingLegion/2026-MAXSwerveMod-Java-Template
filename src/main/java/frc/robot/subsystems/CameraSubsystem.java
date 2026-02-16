@@ -98,11 +98,11 @@ public class CameraSubsystem extends SubsystemBase {
         }
 
 
-        SmartDashboard.putData("Field", m_field);
+        SmartDashboard.putData("FieldCameraAveraged", m_field);
 
 
         //rotation is read in radians
-        m_field.setRobotPose(new Pose2d(getRobotPos(), new Rotation2d((localRobotContainer.m_robotDrive.getHeading()-180) * Constants.degreesToRadians)));
+        m_field.setRobotPose(cameraRobotPose2d());
 
         // System.out.println("X,Y Averaged Positions: ("+getRobotX()+","+getRobotY()+")");
         // System.out.println("X,Y Averaged Translation: ("+getRobotPos().getX()+","+getRobotPos().getY()+")");
@@ -140,7 +140,9 @@ public class CameraSubsystem extends SubsystemBase {
                 pos += rpiCams.get(i).getCameraX();
                 count++;
             }
+            System.out.println("For Loop Active");
         }
+        System.out.println("Robot X: " + pos/count);
         return pos/count;
     }
 
@@ -155,6 +157,21 @@ public class CameraSubsystem extends SubsystemBase {
         }
         return pos/count;
     }
+
+    public double getRobotTheta() {
+        double x = 0;
+        double y = 0;
+        int count = 0;
+
+        for(var i = 0; i < rpiCams.size(); i++) {
+            if(rpiCams.get(i).checkCanGetPos() == true) {
+                x+=Math.cos(rpiCams.get(i).getCameraHeading());
+                y+=Math.sin(rpiCams.get(i).getCameraHeading());
+                count++;
+            }
+        }
+        return Math.atan2(y/count,x/count);
+    }
         
     public Translation2d getRobotPos() {
         Translation2d pos = new Translation2d(0,0);
@@ -166,6 +183,13 @@ public class CameraSubsystem extends SubsystemBase {
                 //System.out.println("("+rpiCams.get(i).getCameraPos().getX()+","+rpiCams.get(i).getCameraPos().getY()+") (CAMERA) vs (FXN) ("+pos.getX()+","+pos.getY()+")"+"("+count+")");
             }
         }
+        if(count == 0) {
+            System.out.println("ERROR!!! DIVIDING BY 0");
+        }
         return pos.div(count);
+    }
+
+    public Pose2d cameraRobotPose2d() {
+        return new Pose2d(getRobotPos(), new Rotation2d(getRobotTheta()));
     }
 }

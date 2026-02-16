@@ -17,6 +17,13 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * project.
  */
 public class Robot extends TimedRobot {
+  private Command autonomousCommand;
+
+  String[] autonomousList = {
+    "FirstTest Auto"
+  };
+
+  String autoSelected; 
   private Command m_autonomousCommand;
 
   private RobotContainer m_robotContainer;
@@ -29,6 +36,8 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+
+    SmartDashboard.putStringArray("Auto List", autonomousList);
   }
 
   /**
@@ -57,7 +66,13 @@ public class Robot extends TimedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+      // switch(autoSelected) {
+      //   case "Auto List":
+      //   m_autonomousCommand = m_robotContainer.autonomousCommands;
+      // }
+
+
+    // m_autonomousCommand = m_robotContainer.getAutonomousCommand(); For manual autos
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {

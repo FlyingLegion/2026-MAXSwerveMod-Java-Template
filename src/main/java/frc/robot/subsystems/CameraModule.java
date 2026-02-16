@@ -164,6 +164,11 @@ public class CameraModule extends SubsystemBase {
     public double getCameraY() {
         return cameraY;
     }
+
+    public double getCameraHeading() {
+        return cameraHeading;
+    }
+
     public Translation2d getCameraPos() {
         return cameraPos;
     }

@@ -25,6 +25,9 @@ import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import java.util.List;
+
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 //subsystems
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.CameraSubsystem;
@@ -40,7 +43,7 @@ import frc.robot.subsystems.CameraModule;
 public class RobotContainer {
   // The robot's subsystems
   public final DriveSubsystem m_robotDrive = new DriveSubsystem();
-  public final CameraSubsystem m_cameraSubsystem = new CameraSubsystem(this);
+  public CameraSubsystem m_cameraSubsystem = new CameraSubsystem(this);
  
   // The driver's controller
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
@@ -101,6 +104,22 @@ private void configureButtonBindings() {
     m_driverController.start()
         .onTrue(m_robotDrive.zeroHeadingCommand());
     
+    //PROPOSED SOLUTIONS/DEBUG: 
+    // 1.Create variables in camerasubsystem directly to check the connection between the 2 subsystems
+    // 2.Pass X,Y, & Rotation into Odometry command and construct Pose2D in Drive locally
+
+    m_driverController.back()
+      .onTrue(m_robotDrive.resetOdometryPoseCommand(new Pose2d(m_cameraSubsystem.getRobotX(), 
+                                                m_cameraSubsystem.getRobotY(),
+                                                new Rotation2d(45))));
+                                                //new Rotation2d(m_cameraSubsystem.getRobotTheta()))));
+
+    // m_driverController.back()
+    //   .onTrue(m_robotDrive.resetOdometryCommand(m_cameraSubsystem.cameraRobotPose2d()));                                            
+
+    m_driverController.y()
+      .onTrue(m_robotDrive.resetOdometryCommand(new Pose2d(1, 2, new Rotation2d(45))));
+
 }
 
 
@@ -109,47 +128,14 @@ private void configureButtonBindings() {
    *
    * @return the command to run in autonomous
    */
-  public Command getAutonomousCommand() {
-    // Create config for trajectory
-    TrajectoryConfig config = new TrajectoryConfig(
-        AutoConstants.kMaxSpeedMetersPerSecond,
-        AutoConstants.kMaxAccelerationMetersPerSecondSquared)
-        // Add kinematics to ensure max speed is actually obeyed
-        .setKinematics(DriveConstants.kDriveKinematics);
 
-    // An example trajectory to follow. All units in meters.
-    Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
-        // Start at the origin facing the +X direction
-        new Pose2d(0, 0, new Rotation2d(0)),
-        // Pass through these two interior waypoints, making an 's' curve path
-        List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
-        // End 3 meters straight ahead of where we started, facing forward
-        new Pose2d(3, 0, new Rotation2d(0)),
-        config);
+  // public Command autonomousCommands(int autoSelected) {
+  //   var amountOfAutos = 1;
+  //   String autoArray[] = new String[amountOfAutos];
+  //   autoArray[0] = "FirstTest Auto";
 
-    var thetaController = new ProfiledPIDController(
-        AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
-    thetaController.enableContinuousInput(-Math.PI, Math.PI);
-
-    SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
-        exampleTrajectory,
-        m_robotDrive::getPose, // Functional interface to feed supplier
-        DriveConstants.kDriveKinematics,
-
-        // Position controllers
-        new PIDController(AutoConstants.kPXController, 0, 0),
-        new PIDController(AutoConstants.kPYController, 0, 0),
-        thetaController,
-        m_robotDrive::setModuleStates,
-        m_robotDrive);
-
-    // Reset odometry to the starting pose of the trajectory.
-    m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
-    // 67
-    // Run path following command, then stop at the end.
-    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
-  }
-
+  //   return new PathPlannerAuto(autoArray[autoSelected]);
+  // }
   
   public Translation2d polarToCartesian(Translation2d polar) {
     //(r,theta)
@@ -170,6 +156,7 @@ private void configureButtonBindings() {
     Translation2d polar = new Translation2d(r,theta);
     return polar;
   }
+
   
   public double translationMagnitude(Translation2d vector) {
     return Math.sqrt(Math.pow(vector.getX(),2) + Math.pow(vector.getY(),2));
