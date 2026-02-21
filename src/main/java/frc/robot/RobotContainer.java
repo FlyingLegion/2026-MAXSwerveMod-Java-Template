@@ -20,6 +20,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -42,7 +43,7 @@ import frc.robot.subsystems.CameraModule;
  */
 public class RobotContainer {
   // The robot's subsystems
-  public final DriveSubsystem m_robotDrive = new DriveSubsystem();
+  public final DriveSubsystem m_robotDrive = new DriveSubsystem(this);
   public CameraSubsystem m_cameraSubsystem = new CameraSubsystem(this);
  
   // The driver's controller
@@ -108,11 +109,14 @@ private void configureButtonBindings() {
     // 1.Create variables in camerasubsystem directly to check the connection between the 2 subsystems
     // 2.Pass X,Y, & Rotation into Odometry command and construct Pose2D in Drive locally
 
+    // m_driverController.back()
+    //   .onTrue(m_robotDrive.resetOdometryCommand(new Pose2d(m_cameraSubsystem.getRobotPos(), new Rotation2d(0))));
+    
     m_driverController.back()
-      .onTrue(m_robotDrive.resetOdometryPoseCommand(new Pose2d(m_cameraSubsystem.getRobotX(), 
-                                                m_cameraSubsystem.getRobotY(),
-                                                new Rotation2d(45))));
-                                                //new Rotation2d(m_cameraSubsystem.getRobotTheta()))));
+      .onTrue(m_cameraSubsystem.cameraOdoCmd());
+
+    // m_driverController.back()
+    //   .onTrue(Commands.print("This is this:" + m_cameraSubsystem.getRobotPos2()));
 
     // m_driverController.back()
     //   .onTrue(m_robotDrive.resetOdometryCommand(m_cameraSubsystem.cameraRobotPose2d()));                                            

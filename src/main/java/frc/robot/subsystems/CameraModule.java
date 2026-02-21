@@ -33,6 +33,7 @@ public class CameraModule extends SubsystemBase {
     public boolean cameraHasTargets;
     public boolean canGetPos;
     public int pipelineIndex;
+    public String CameraName; //public version
 
     //Target Information
     public int targetID;
@@ -56,6 +57,7 @@ public class CameraModule extends SubsystemBase {
     
     public CameraModule(String cameraName, String cameraRemoteHost, Transform3d robotToCam, RobotContainer m_robotContainer){
         localRobotContainer = m_robotContainer;
+        CameraName = cameraName; //CameraName is the public version
         
         PortForwarder.add(5800, cameraRemoteHost, 5800);
 
@@ -77,24 +79,23 @@ public class CameraModule extends SubsystemBase {
         cameraPos = new Translation2d(0, 0);
         cameraRot = new Rotation3d(0, 0, 0);
 
-        System.out.println("Camera Module Initialized (" + cameraName + "" + cameraRemoteHost + "");
+        System.out.println("Camera Module Initialized (" + cameraName + ", " + cameraRemoteHost + ")");
+        SmartDashboard.putString("Camera Modules", "Running");
+        SmartDashboard.putData("Field" + genericCamera.getName(), m_camField);
     }
 
     @Override
     public void periodic(){
-        SmartDashboard.putString("Camera Modules", "Running");
-        SmartDashboard.putData("Field" + genericCamera.getName(), m_camField);
-
-
 
         List<PhotonPipelineResult> results = genericCamera.getAllUnreadResults();
         if(!results.isEmpty()){
             PhotonPipelineResult result = results.get(results.size() - 1);
             cameraHasTargets = result.hasTargets();
-            if(cameraHasTargets){
+
+            if(cameraHasTargets){ //sees >= 1 tag
                 robotPose = photonPoseEstimator.estimateCoprocMultiTagPose(result);
 
-                if(!robotPose.isEmpty()) {
+                if(!robotPose.isEmpty()) { //sees >= 2 tags
                     canGetPos = true;
                     cameraX = robotPose.get().estimatedPose.getX();
                     cameraY = robotPose.get().estimatedPose.getY();

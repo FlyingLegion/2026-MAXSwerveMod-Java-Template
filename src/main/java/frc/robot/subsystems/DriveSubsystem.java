@@ -10,13 +10,16 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import com.studica.frc.AHRS;
 
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
@@ -49,7 +52,8 @@ public class DriveSubsystem extends SubsystemBase {
       DriveConstants.kRearRightTurningCanId,
       DriveConstants.kBackRightChassisAngularOffset);
 
-  public final Field2d m_field = new Field2d(); //Field Widget
+  public final Field2d m_field_odometry = new Field2d(); //Field Widget
+  public final Field2d m_field_estimator = new Field2d(); //Field Widget
 
 
 
@@ -66,11 +70,29 @@ public class DriveSubsystem extends SubsystemBase {
           m_rearLeft.getPosition(),
           m_rearRight.getPosition()
       });
+
+
+  SwerveDrivePoseEstimator m_estimator = new SwerveDrivePoseEstimator(
+      DriveConstants.kDriveKinematics,
+      Rotation2d.fromDegrees(navX.getAngle()),
+      new SwerveModulePosition[] {
+          m_frontLeft.getPosition(),
+          m_frontRight.getPosition(),
+          m_rearLeft.getPosition(),
+          m_rearRight.getPosition()
+      },
+      new Pose2d(new Translation2d(0,0),new Rotation2d(0))
+      );
+
   
   /** Creates a new DriveSubsystem. */
-  public DriveSubsystem() {
+  public DriveSubsystem(RobotContainer m_robotContainer) {
+    localRobotContainer = m_robotContainer;
     // Usage reporting for MAXSwerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
+    SmartDashboard.putData("FieldOdometry", m_field_odometry);
+    SmartDashboard.putData("FieldEstimator", m_field_estimator);
+
   }
 
   @Override
@@ -84,10 +106,22 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
+    m_estimator.update(
+        Rotation2d.fromDegrees(-navX.getAngle()),
+        new SwerveModulePosition[] {
+            m_frontLeft.getPosition(),
+            m_frontRight.getPosition(),
+            m_rearLeft.getPosition(),
+            m_rearRight.getPosition()
+        });
+    if(localRobotContainer.m_cameraSubsystem.cameraRobotPose2d().getTranslation().getDistance(new Translation2d(0,0)) != 0){
+      m_estimator.addVisionMeasurement(localRobotContainer.m_cameraSubsystem.cameraRobotPose2d(), Timer.getFPGATimestamp());
+    }
+    m_field_odometry.setRobotPose(this.getPose());
+    m_field_estimator.setRobotPose(m_estimator.getEstimatedPosition());
 
-    SmartDashboard.putData("FieldDrive", m_field);
-    m_field.setRobotPose(this.getPose());
   }
+
 
   /**
    * Returns the currently-estimated pose of the robot.
@@ -114,19 +148,22 @@ public class DriveSubsystem extends SubsystemBase {
         pose);
     System.out.println("Reset Odometry: " + pose.toString());
   }
-
-  public void resetOdometryPose(Pose2d pose) {
-    m_odometry.resetPose(pose);
-    System.out.println("Reset Od. Pose: " + pose.toString());
-  }
-
-  public Command resetOdometryPoseCommand(Pose2d pose) {
-    return this.runOnce(() -> resetOdometryPose(pose));
-  }
-
+  
   public Command resetOdometryCommand(Pose2d pose) {
     return this.runOnce(() -> resetOdometry(pose));
   }
+
+
+  
+  // public void resetOdometryPose(Pose2d pose) {
+  //   m_odometry.resetPose(pose);
+  //   System.out.println("Reset Od. Pose: " + pose.toString());
+  // }
+
+  // public Command resetOdometryPoseCommand(Pose2d pose) {
+  //   return this.runOnce(() -> resetOdometryPose(pose));
+  // }
+
 
   /**
    * Method to drive the robot using joystick info.

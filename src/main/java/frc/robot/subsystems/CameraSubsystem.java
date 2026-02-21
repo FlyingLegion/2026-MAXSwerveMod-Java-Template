@@ -11,6 +11,7 @@ import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.smartdashboard.*;
 import edu.wpi.first.wpilibj.shuffleboard.*;
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.*;
@@ -82,31 +83,25 @@ public class CameraSubsystem extends SubsystemBase {
         rpiCams.add(WhiteCamera);
         rpiCams.add(YellowCamera);
         rpiCams.add(BlackCamera);
+
+        
+        SmartDashboard.putData("FieldCameraAveraged", m_field);
     }
 
     @Override
     public void periodic() {
-        diffToRedGoal = Constants.FieldConstants.redGoal.minus(getRobotPos());
-        diffToBlueGoal = Constants.FieldConstants.blueGoal.minus(getRobotPos());
-        double blueMagnitude = localRobotContainer.translationMagnitude(diffToBlueGoal);
-        double redMagnitude = localRobotContainer.translationMagnitude(diffToRedGoal);
-        Translation2d polar = new Translation2d(0,0);
-        if(blueMagnitude < redMagnitude) {
-            polar = localRobotContainer.cartesianToPolar(diffToBlueGoal);
-        } else {
-            polar = localRobotContainer.cartesianToPolar(diffToRedGoal);
-        }
+        // diffToRedGoal = Constants.FieldConstants.redGoal.minus(getRobotPos());
+        // diffToBlueGoal = Constants.FieldConstants.blueGoal.minus(getRobotPos());
+        // double blueMagnitude = localRobotContainer.translationMagnitude(diffToBlueGoal);
+        // double redMagnitude = localRobotContainer.translationMagnitude(diffToRedGoal);
+        // Translation2d polar = new Translation2d(0,0);
+        // if(blueMagnitude < redMagnitude) {
+        //     polar = localRobotContainer.cartesianToPolar(diffToBlueGoal);
+        // } else {
+        //     polar = localRobotContainer.cartesianToPolar(diffToRedGoal);
+        // }
 
-
-        SmartDashboard.putData("FieldCameraAveraged", m_field);
-
-
-        //rotation is read in radians
-        m_field.setRobotPose(cameraRobotPose2d());
-
-        // System.out.println("X,Y Averaged Positions: ("+getRobotX()+","+getRobotY()+")");
-        // System.out.println("X,Y Averaged Translation: ("+getRobotPos().getX()+","+getRobotPos().getY()+")");
-        // System.out.println("r,θ in relation to nearest goal: ("+polar.getX()+","+polar.getY()+")");
+        m_field.setRobotPose(cameraRobotPose2d()); // rotation is read in radians
     }
 
     public void switchPipelineIndex(){
@@ -140,10 +135,13 @@ public class CameraSubsystem extends SubsystemBase {
                 pos += rpiCams.get(i).getCameraX();
                 count++;
             }
-            System.out.println("For Loop Active");
         }
-        System.out.println("Robot X: " + pos/count);
-        return pos/count;
+        if(count > 0) {
+            return pos/count;
+        } else {
+            System.out.println("ERROR!!! COUNT IS 0 (getRobotX())");
+            return -1;
+        }
     }
 
     public double getRobotY() {
@@ -155,7 +153,13 @@ public class CameraSubsystem extends SubsystemBase {
                 count++;
             }
         }
-        return pos/count;
+
+        if(count > 0) {
+            return pos/count;
+        } else {
+            System.out.println("ERROR!!! COUNT IS 0 (getRobotY())");
+            return -1;
+        }
     }
 
     public double getRobotTheta() {
@@ -170,7 +174,12 @@ public class CameraSubsystem extends SubsystemBase {
                 count++;
             }
         }
-        return Math.atan2(y/count,x/count);
+        if(count > 0) {
+            return Math.atan2(y/count,x/count);
+        } else {
+            System.out.println("ERROR!!! COUNT IS 0 (getRobotTheta())");
+            return -1;
+        }
     }
         
     public Translation2d getRobotPos() {
@@ -180,16 +189,55 @@ public class CameraSubsystem extends SubsystemBase {
             if(rpiCams.get(i).checkCanGetPos() == true) {
                 pos = pos.plus(rpiCams.get(i).getCameraPos());
                 count++;
-                //System.out.println("("+rpiCams.get(i).getCameraPos().getX()+","+rpiCams.get(i).getCameraPos().getY()+") (CAMERA) vs (FXN) ("+pos.getX()+","+pos.getY()+")"+"("+count+")");
+                // System.out.println("("+rpiCams.get(i).getCameraPos().getX()+","+rpiCams.get(i).getCameraPos().getY()+") (CAMERA) vs (FXN) ("+pos.getX()+","+pos.getY()+")"+"("+count+")");
             }
         }
-        if(count == 0) {
-            System.out.println("ERROR!!! DIVIDING BY 0");
+        if(count > 0) {
+            return pos.div(count);
+        } else {
+            //System.out.println("ERROR!!! COUNT IS 0 (getRobotPos())");
+            return new Translation2d(0,0);
+            
         }
-        return pos.div(count);
+    }
+
+    public Object getRobotPos2() {
+        try{
+            Translation2d pos = new Translation2d(0,0);
+            int count = 0;
+            for(var i = 0; i < rpiCams.size(); i++) {
+                if(rpiCams.get(i).checkCanGetPos() == true) {
+                    pos = pos.plus(rpiCams.get(i).getCameraPos());
+                    count++;
+                    // System.out.println("("+rpiCams.get(i).getCameraPos().getX()+","+rpiCams.get(i).getCameraPos().getY()+") (CAMERA) vs (FXN) ("+pos.getX()+","+pos.getY()+")"+"("+count+")");
+                }
+            }
+            if(count > 0) {
+                return rpiCams.get(0)
+                .genericCamera.getAllUnreadResults()
+                .get(rpiCams.get(0).genericCamera.getAllUnreadResults().size() - 1)
+                .hasTargets();
+            } else {
+                return rpiCams.get(0)
+                .genericCamera.getAllUnreadResults()
+                .get(rpiCams.get(0).genericCamera.getAllUnreadResults().size() - 1)
+                .hasTargets();
+            }
+        } catch(Exception ex) { 
+            System.out.println(ex);
+            return "no";
+        }
     }
 
     public Pose2d cameraRobotPose2d() {
         return new Pose2d(getRobotPos(), new Rotation2d(getRobotTheta()));
+    }
+
+    public void odometryTest() {
+        localRobotContainer.m_robotDrive.resetOdometry(cameraRobotPose2d());
+    }
+
+    public Command cameraOdoCmd() {
+        return this.runOnce(() -> odometryTest());
     }
 }
