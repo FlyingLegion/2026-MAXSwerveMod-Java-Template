@@ -84,7 +84,6 @@ public class CameraSubsystem extends SubsystemBase {
         rpiCams.add(YellowCamera);
         rpiCams.add(BlackCamera);
 
-        
         SmartDashboard.putData("FieldCameraAveraged", m_field);
     }
 
@@ -128,7 +127,6 @@ public class CameraSubsystem extends SubsystemBase {
         if(count > 0) {
             return pos/count;
         } else {
-            System.out.println("ERROR!!! COUNT IS 0 (getRobotX())");
             return -1;
         }
     }
@@ -142,12 +140,9 @@ public class CameraSubsystem extends SubsystemBase {
                 count++;
             }
         }
-    
-
         if(count > 0) {
             return pos/count;
         } else {
-            System.out.println("ERROR!!! COUNT IS 0 (getRobotY())");
             return -1;
         }
     }
@@ -167,7 +162,6 @@ public class CameraSubsystem extends SubsystemBase {
         if(count > 0) {
             return Math.atan2(y/count,x/count);
         } else {
-            System.out.println("ERROR!!! COUNT IS 0 (getRobotTheta())");
             return -1;
         }
     }
@@ -185,9 +179,7 @@ public class CameraSubsystem extends SubsystemBase {
         if(count > 0) {
             return pos.div(count);
         } else {
-            //System.out.println("ERROR!!! COUNT IS 0 (getRobotPos())");
             return new Translation2d(0,0);
-            
         }
     }
 

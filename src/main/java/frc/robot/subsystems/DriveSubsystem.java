@@ -10,6 +10,8 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import com.studica.frc.AHRS;
 
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,7 +21,10 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
@@ -114,9 +119,10 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-    if(localRobotContainer.m_cameraSubsystem.cameraRobotPose2d().getTranslation().getDistance(new Translation2d(0,0)) != 0){
-      m_estimator.addVisionMeasurement(localRobotContainer.m_cameraSubsystem.cameraRobotPose2d(), Timer.getFPGATimestamp());
-    }
+    // Moved addVisionMeasurement into CameraModule
+    // if(localRobotContainer.m_cameraSubsystem.cameraRobotPose2d().getTranslation().getDistance(new Translation2d(0,0)) != 0){
+    //   m_estimator.addVisionMeasurement(localRobotContainer.m_cameraSubsystem.cameraRobotPose2d(), Timer.getFPGATimestamp());
+    // }
     m_field_odometry.setRobotPose(this.getPose());
     m_field_estimator.setRobotPose(m_estimator.getEstimatedPosition());
 
@@ -128,7 +134,8 @@ public class DriveSubsystem extends SubsystemBase {
    *
    */
   public Pose2d getPose() {
-    return m_odometry.getPoseMeters();
+    // return m_odometry.getPoseMeters();
+    return m_estimator.getEstimatedPosition();
   }
 
   /**
@@ -146,6 +153,16 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
         },
         pose);
+    
+    m_estimator.resetPosition(
+        Rotation2d.fromDegrees(-navX.getAngle()),
+        new SwerveModulePosition[] {
+            m_frontLeft.getPosition(),
+            m_frontRight.getPosition(),
+            m_rearLeft.getPosition(),
+            m_rearRight.getPosition(), 
+          },
+            pose);
     System.out.println("Reset Odometry: " + pose.toString());
   }
   
@@ -155,14 +172,7 @@ public class DriveSubsystem extends SubsystemBase {
 
 
   
-  // public void resetOdometryPose(Pose2d pose) {
-  //   m_odometry.resetPose(pose);
-  //   System.out.println("Reset Od. Pose: " + pose.toString());
-  // }
-
-  // public Command resetOdometryPoseCommand(Pose2d pose) {
-  //   return this.runOnce(() -> resetOdometryPose(pose));
-  // }
+  
 
 
   /**
@@ -257,4 +267,23 @@ public class DriveSubsystem extends SubsystemBase {
   public double getTurnRate() {
     return navX.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
+
+
+
+
+  
+
+  //Alignment code for the robot
+  public Translation2d radialOffset(double radius, double theta){
+    Translation2d currentPolar = localRobotContainer.m_cameraSubsystem.getRelativePolar();
+    Translation2d currentCartes = localRobotContainer.polarToCartesian(currentPolar);
+    Translation2d targetPolar = new Translation2d(radius, theta);
+    Translation2d targetCartes = localRobotContainer.polarToCartesian(targetPolar);
+    PIDController PID = new PIDController(0.01, 0, 0); //0.004, 0, 0
+    double xmove = PID.calculate(currentCartes.getX(), targetCartes.getX());
+    double ymove = PID.calculate(currentCartes.getY(), targetCartes.getY());
+    Translation2d movement = new Translation2d(xmove,ymove);
+    return movement;
+  }
 }
+

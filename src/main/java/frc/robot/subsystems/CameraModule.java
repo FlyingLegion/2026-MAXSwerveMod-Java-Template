@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
+import edu.wpi.first.wpilibj.Timer;
 
 
 public class CameraModule extends SubsystemBase {
@@ -50,9 +51,11 @@ public class CameraModule extends SubsystemBase {
     public Translation2d cameraPos;
     public Rotation3d cameraRot;
     public double cameraHeading;
+    public double cameraTimer;
 
     //AprilTag Map (VERY IMPORTANT)
-    public static final AprilTagFieldLayout fieldLayout26 = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded); //loads the apriltag layout
+    //public static final AprilTagFieldLayout fieldLayout26 = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded); //loads the apriltag layout
+    public static final AprilTagFieldLayout fieldLayout26 = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark); //loads the apriltag layout
     public final Field2d m_camField = new Field2d(); 
     
     public CameraModule(String cameraName, String cameraRemoteHost, Transform3d robotToCam, RobotContainer m_robotContainer){
@@ -78,6 +81,8 @@ public class CameraModule extends SubsystemBase {
         cameraY = 0;
         cameraPos = new Translation2d(0, 0);
         cameraRot = new Rotation3d(0, 0, 0);
+        cameraHeading = 0.0;
+        cameraTimer = 0;
 
         System.out.println("Camera Module Initialized (" + cameraName + ", " + cameraRemoteHost + ")");
         SmartDashboard.putString("Camera Modules", "Running");
@@ -86,7 +91,7 @@ public class CameraModule extends SubsystemBase {
 
     @Override
     public void periodic(){
-
+        cameraTimer = Timer.getFPGATimestamp();
         List<PhotonPipelineResult> results = genericCamera.getAllUnreadResults();
         if(!results.isEmpty()){
             PhotonPipelineResult result = results.get(results.size() - 1);
@@ -108,6 +113,7 @@ public class CameraModule extends SubsystemBase {
                     //SmartDashboard.putNumber("robotHeadingRad " + genericCamera.getName(), cameraHeading);
                     //SmartDashboard.putNumber("robotHeadingDeg " + genericCamera.getName(), cameraHeading*Constants.radiansToDegrees);
                     //m_camField.setRobotPose(robotPose.get().estimatedPose.toPose2d());
+                    localRobotContainer.m_robotDrive.m_estimator.addVisionMeasurement(new Pose2d(cameraPos, new Rotation2d(cameraHeading)), cameraTimer);
                     m_camField.setRobotPose(new Pose2d(cameraX, cameraY, new Rotation2d(cameraHeading)));
 
                 } else {
@@ -115,6 +121,7 @@ public class CameraModule extends SubsystemBase {
                     cameraX = 0;
                     cameraY = 0;
                     cameraRot = new Rotation3d(0,0,0);
+                    cameraHeading = 0.0;
                     cameraPos = new Translation2d(0,0);
                     m_camField.setRobotPose(new Pose2d(0,0, new Rotation2d(0.5,0.5)));
                 }

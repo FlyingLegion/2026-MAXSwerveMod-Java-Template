@@ -45,6 +45,7 @@ public class RobotContainer {
   // The robot's subsystems
   public final DriveSubsystem m_robotDrive = new DriveSubsystem(this);
   public CameraSubsystem m_cameraSubsystem = new CameraSubsystem(this);
+  public Robot m_robot = new Robot();
  
   // The driver's controller
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
@@ -104,6 +105,12 @@ private void configureButtonBindings() {
     /* Manual reset for robot orientation */
     m_driverController.start()
         .onTrue(m_robotDrive.zeroHeadingCommand());
+
+    m_driverController.y()
+      .onTrue(new RunCommand(() -> m_robotDrive.drive(
+        m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getX(),
+        m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getY(),
+        0,true),m_robotDrive));
     
     //PROPOSED SOLUTIONS/DEBUG: 
     // 1.Create variables in camerasubsystem directly to check the connection between the 2 subsystems
@@ -121,8 +128,8 @@ private void configureButtonBindings() {
     // m_driverController.back()
     //   .onTrue(m_robotDrive.resetOdometryCommand(m_cameraSubsystem.cameraRobotPose2d()));                                            
 
-    m_driverController.y()
-      .onTrue(m_robotDrive.resetOdometryCommand(new Pose2d(1, 2, new Rotation2d(45))));
+    // m_driverController.y()
+    //   .onTrue(m_robotDrive.resetOdometryCommand(new Pose2d(1, 2, new Rotation2d(45))));
 
 }
 

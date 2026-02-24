@@ -18,6 +18,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  */
 public class Robot extends TimedRobot {
   private Command autonomousCommand;
+  public double globalRadiusTarget = 2;
+  public double globalThetaTarget = 3*Math.PI/2;
 
   String[] autonomousList = {
     "FirstTest Auto"
@@ -98,6 +100,8 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+    globalRadiusTarget += m_robotContainer.m_driverController.getLeftY();
+    globalThetaTarget += m_robotContainer.m_driverController.getRightX();
   }
 
   @Override
