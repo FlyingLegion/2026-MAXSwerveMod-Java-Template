@@ -23,10 +23,10 @@ import frc.robot.RobotContainer;
 public class CameraSubsystem extends SubsystemBase {  
     private RobotContainer localRobotContainer;
 
-    private final CameraModule OrangeCamera;
-    private final CameraModule WhiteCamera;
-    private final CameraModule YellowCamera;
-    private final CameraModule BlackCamera;
+    public final CameraModule OrangeCamera;
+    public final CameraModule WhiteCamera;
+    public final CameraModule YellowCamera;
+    public final CameraModule BlackCamera;
     // public final CameraModule ArduCam;
     //Arraylist of raspberry pi cameras
     public ArrayList<CameraModule> rpiCams = new ArrayList<CameraModule>();
@@ -90,17 +90,6 @@ public class CameraSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // diffToRedGoal = Constants.FieldConstants.redGoal.minus(getRobotPos());
-        // diffToBlueGoal = Constants.FieldConstants.blueGoal.minus(getRobotPos());
-        // double blueMagnitude = localRobotContainer.translationMagnitude(diffToBlueGoal);
-        // double redMagnitude = localRobotContainer.translationMagnitude(diffToRedGoal);
-        // Translation2d polar = new Translation2d(0,0);
-        // if(blueMagnitude < redMagnitude) {
-        //     polar = localRobotContainer.cartesianToPolar(diffToBlueGoal);
-        // } else {
-        //     polar = localRobotContainer.cartesianToPolar(diffToRedGoal);
-        // }
-
         m_field.setRobotPose(cameraRobotPose2d()); // rotation is read in radians
     }
 
@@ -153,6 +142,7 @@ public class CameraSubsystem extends SubsystemBase {
                 count++;
             }
         }
+    
 
         if(count > 0) {
             return pos/count;
@@ -240,4 +230,19 @@ public class CameraSubsystem extends SubsystemBase {
     public Command cameraOdoCmd() {
         return this.runOnce(() -> odometryTest());
     }
+
+    public Translation2d getRelativePolar() {
+        diffToRedGoal = Constants.FieldConstants.redGoal.minus(getRobotPos());
+        diffToBlueGoal = Constants.FieldConstants.blueGoal.minus(getRobotPos());
+        double blueMagnitude = localRobotContainer.translationMagnitude(diffToBlueGoal);
+        double redMagnitude = localRobotContainer.translationMagnitude(diffToRedGoal);
+        Translation2d polar = new Translation2d(0,0);
+        if(blueMagnitude < redMagnitude) {
+            polar = localRobotContainer.cartesianToPolar(diffToBlueGoal);
+        } else {
+            polar = localRobotContainer.cartesianToPolar(diffToRedGoal);
+        }
+        return polar;
+    }
+
 }
