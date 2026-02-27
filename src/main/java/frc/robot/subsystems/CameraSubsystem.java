@@ -36,9 +36,6 @@ public class CameraSubsystem extends SubsystemBase {
     public double robotY;
     public double robotPos;
     public double distanceToGoal;
-    public Translation2d diffToRedGoal;
-    public Translation2d diffToBlueGoal;
-
 
     //GLASS VARIABLES
     public final Field2d m_field = new Field2d(); //Field Widget
@@ -224,17 +221,14 @@ public class CameraSubsystem extends SubsystemBase {
     }
 
     public Translation2d getRelativePolar() {
-        diffToRedGoal = Constants.FieldConstants.redGoal.minus(getRobotPos());
-        diffToBlueGoal = Constants.FieldConstants.blueGoal.minus(getRobotPos());
+        Translation2d diffToRedGoal = Constants.FieldConstants.redGoal.minus(getRobotPos());
+        Translation2d diffToBlueGoal = Constants.FieldConstants.blueGoal.minus(getRobotPos());
         double blueMagnitude = localRobotContainer.translationMagnitude(diffToBlueGoal);
         double redMagnitude = localRobotContainer.translationMagnitude(diffToRedGoal);
-        Translation2d polar = new Translation2d(0,0);
         if(blueMagnitude < redMagnitude) {
-            polar = localRobotContainer.cartesianToPolar(diffToBlueGoal);
+            return localRobotContainer.cartesianToPolar(diffToBlueGoal);
         } else {
-            polar = localRobotContainer.cartesianToPolar(diffToRedGoal);
+            return localRobotContainer.cartesianToPolar(diffToRedGoal);
         }
-        return polar;
     }
-
 }

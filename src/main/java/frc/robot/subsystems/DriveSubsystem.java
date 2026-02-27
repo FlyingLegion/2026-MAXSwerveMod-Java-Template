@@ -7,6 +7,10 @@ package frc.robot.subsystems;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.studica.frc.AHRS;
 
 import edu.wpi.first.hal.HAL;
@@ -22,11 +26,13 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -64,6 +70,9 @@ public class DriveSubsystem extends SubsystemBase {
 
   // The navX sensor
   private final AHRS navX = new AHRS(AHRS.NavXComType.kMXP_SPI, AHRS.NavXUpdateRate.k50Hz);
+  private RobotConfig robotAutoConfig;
+
+  private PIDController rotationPID= new PIDController(0.01, 0, 0);
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
@@ -95,6 +104,39 @@ public class DriveSubsystem extends SubsystemBase {
     localRobotContainer = m_robotContainer;
     // Usage reporting for MAXSwerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
+
+    try{
+      robotAutoConfig = RobotConfig.fromGUISettings();
+    } catch (Exception e) {
+      // Handle exception as needed
+      e.printStackTrace();
+      System.out.println("Config Error");
+    }
+
+    AutoBuilder.configure(
+      this::getPose, // Robot pose supplier
+      this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
+      this::getRobotRelativeSpeed, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+      this::driveRobotRelativeSpeed, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+      new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+        new PIDConstants(5, 0.0, 0.0), // Translation PID constants 
+        new PIDConstants(5, 0, 0.0) // Rotation PID constants
+      ),
+      robotAutoConfig, // The robot configuration
+      () -> {
+        // Boolean supplier that controls when the path will be mirrored for the red alliance
+        // This will flip the path being followed to the red side of the field.
+        // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+          return alliance.get() == DriverStation.Alliance.Red;
+        }
+        return false;
+      },
+      this // Reference to this subsystem to set requirements
+    );
+
+
     SmartDashboard.putData("FieldOdometry", m_field_odometry);
     SmartDashboard.putData("FieldEstimator", m_field_estimator);
 
@@ -170,6 +212,16 @@ public class DriveSubsystem extends SubsystemBase {
     return this.runOnce(() -> resetOdometry(pose));
   }
 
+   public ChassisSpeeds getRobotRelativeSpeed() {
+    var frontLeftState = m_frontLeft.getState();
+    var frontRightState = m_frontRight.getState();
+    var backLeftState = m_rearLeft.getState();
+    var backRightState = m_rearRight.getState();
+      // Convert to chassis speeds
+      return DriveConstants.kDriveKinematics.toChassisSpeeds(
+        frontLeftState, frontRightState, backLeftState, backRightState);
+  }
+
 
   
   
@@ -201,6 +253,13 @@ public class DriveSubsystem extends SubsystemBase {
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_rearLeft.setDesiredState(swerveModuleStates[2]);
     m_rearRight.setDesiredState(swerveModuleStates[3]);
+  }
+
+   public void driveRobotRelativeSpeed(ChassisSpeeds speeds){
+    double vx = speeds.vxMetersPerSecond;
+    double vy = speeds.vyMetersPerSecond;
+    double rot = speeds.omegaRadiansPerSecond;
+    drive (vx, vy, rot, false);
   }
 
   /**
@@ -275,15 +334,46 @@ public class DriveSubsystem extends SubsystemBase {
 
   //Alignment code for the robot
   public Translation2d radialOffset(double radius, double theta){
+    //coordinates in relation to the goal
     Translation2d currentPolar = localRobotContainer.m_cameraSubsystem.getRelativePolar();
     Translation2d currentCartes = localRobotContainer.polarToCartesian(currentPolar);
+    //target coordinates, also in relation to goal because current is
     Translation2d targetPolar = new Translation2d(radius, theta);
     Translation2d targetCartes = localRobotContainer.polarToCartesian(targetPolar);
-    PIDController PID = new PIDController(0.01, 0, 0); //0.004, 0, 0
-    double xmove = PID.calculate(currentCartes.getX(), targetCartes.getX());
-    double ymove = PID.calculate(currentCartes.getY(), targetCartes.getY());
+    //pid calculationers
+    double xmove = rotationPID.calculate(currentCartes.getX(), targetCartes.getX());
+    double ymove = rotationPID.calculate(currentCartes.getY(), targetCartes.getY());
     Translation2d movement = new Translation2d(xmove,ymove);
     return movement;
   }
+
+  public double getAngularSpeedToNearestGoal() {
+    // input = -error - setpoint/target
+    // if absolute value of error is more than 180, set the error to 360 * the sign of the error
+    double curr = (m_estimator.getEstimatedPosition().getRotation().getDegrees() + 360) % 360; 
+    double targ = 90;
+    // Math.atan2(getPose().getY() - getNearestGoalCoords().getY(), getPose().getX() - getNearestGoalCoords().getX())
+
+    
+    // targ *= Constants.radiansToDegrees;
+    
+    return  rotationPID.calculate(curr, targ);
+  }
+
+  
+    public Translation2d getNearestGoalCoords() {
+        //Uses m_estimator pose estimator from drive subsystem
+        Translation2d diffToRedGoal = Constants.FieldConstants.redGoal.minus(getPose().getTranslation());
+        Translation2d diffToBlueGoal = Constants.FieldConstants.blueGoal.minus(getPose().getTranslation());
+        //Uses distance formula to get vector length to find which is closest
+        double blueMagnitude = localRobotContainer.translationMagnitude(diffToBlueGoal);
+        double redMagnitude = localRobotContainer.translationMagnitude(diffToRedGoal);
+        if(blueMagnitude < redMagnitude) {
+            return Constants.FieldConstants.blueGoal;
+        } else {
+            return Constants.FieldConstants.redGoal;
+        }
+    }
+
 }
 

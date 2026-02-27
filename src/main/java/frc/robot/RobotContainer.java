@@ -16,6 +16,8 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
@@ -27,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import java.util.List;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 //subsystems
@@ -46,6 +49,7 @@ public class RobotContainer {
   public final DriveSubsystem m_robotDrive = new DriveSubsystem(this);
   public CameraSubsystem m_cameraSubsystem = new CameraSubsystem(this);
   public Robot m_robot = new Robot();
+  private final SendableChooser<Command> autoChooser;
  
   // The driver's controller
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
@@ -58,6 +62,11 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the button bindings
     configureButtonBindings();
+
+    autoChooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Choose Your Auto:", autoChooser);
+
+     // NamedCommands.registerCommand("Scorer Score", m_coralScorer.scorerIntakeInCommand(0.15));
 
     // Configure default commands
     m_robotDrive.setDefaultCommand(
@@ -107,10 +116,19 @@ private void configureButtonBindings() {
         .onTrue(m_robotDrive.zeroHeadingCommand());
 
     m_driverController.y()
-      .onTrue(new RunCommand(() -> m_robotDrive.drive(
+      .whileTrue(new RunCommand(() -> m_robotDrive.drive(
         m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getX(),
         m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getY(),
-        0,true),m_robotDrive));
+        0,
+        true),m_robotDrive));
+
+    m_driverController.x()
+     .whileTrue(new RunCommand(() -> m_robotDrive.drive(
+        -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
+        -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
+        m_robotDrive.getAngularSpeedToNearestGoal(), 
+        false), 
+      m_robotDrive));
     
     //PROPOSED SOLUTIONS/DEBUG: 
     // 1.Create variables in camerasubsystem directly to check the connection between the 2 subsystems
@@ -133,20 +151,14 @@ private void configureButtonBindings() {
 
 }
 
+public Command getAutonomousCommand(int autoSelected) {
+  var autoArraySize = 20;
+  String autoArray[] = new String[autoArraySize];
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
+  autoArray[0] = "Test Auto";
 
-  // public Command autonomousCommands(int autoSelected) {
-  //   var amountOfAutos = 1;
-  //   String autoArray[] = new String[amountOfAutos];
-  //   autoArray[0] = "FirstTest Auto";
-
-  //   return new PathPlannerAuto(autoArray[autoSelected]);
-  // }
+  return new PathPlannerAuto(autoArray[autoSelected]);
+}
   
   public Translation2d polarToCartesian(Translation2d polar) {
     //(r,theta)

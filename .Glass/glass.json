@@ -23,11 +23,18 @@
     },
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Choose Your Auto:": "String Chooser",
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/FieldBlack": "Field2d",
+      "/SmartDashboard/FieldCameraAveraged": "Field2d",
+      "/SmartDashboard/FieldEstimator": "Field2d",
+      "/SmartDashboard/FieldOdometry": "Field2d",
+      "/SmartDashboard/FieldOrange": "Field2d",
       "/SmartDashboard/FieldOrange_Pi_Cam": "Field2d",
+      "/SmartDashboard/FieldWhite": "Field2d",
       "/SmartDashboard/FieldYellow": "Field2d",
       "/SmartDashboard/PID Rotation Controller: ": "PIDController",
+      "/SmartDashboard/PathPlanner": "Alerts",
       "/SmartDashboard/PhotonAlerts": "Alerts"
     },
     "windows": {
@@ -49,7 +56,8 @@
         "top": 118,
         "width": 16.54119300842285,
         "window": {
-          "name": "Rebuilt-2026"
+          "name": "Rebuilt-2026",
+          "visible": true
         }
       },
       "/SmartDashboard/FieldBlack": {

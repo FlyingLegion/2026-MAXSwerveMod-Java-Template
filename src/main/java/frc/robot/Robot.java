@@ -17,12 +17,11 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * project.
  */
 public class Robot extends TimedRobot {
-  private Command autonomousCommand;
   public double globalRadiusTarget = 2;
   public double globalThetaTarget = 3*Math.PI/2;
 
   String[] autonomousList = {
-    "FirstTest Auto"
+    "Test Auto"
   };
 
   String autoSelected; 
@@ -68,10 +67,13 @@ public class Robot extends TimedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-      // switch(autoSelected) {
-      //   case "Auto List":
-      //   m_autonomousCommand = m_robotContainer.autonomousCommands;
-      // }
+      autoSelected = SmartDashboard.getString("Choose Your Auto:", "None");
+
+      switch(autoSelected) {
+        case "Test Auto":
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand(0);
+        break;
+      }
 
 
     // m_autonomousCommand = m_robotContainer.getAutonomousCommand(); For manual autos
