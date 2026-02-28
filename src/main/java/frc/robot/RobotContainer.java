@@ -55,7 +55,7 @@ public class RobotContainer {
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
   //CommandXboxController m_opController = new CommandXboxController(OIConstants.kOperatorControllerPort);
   PIDController pidRotationController = new PIDController(0.004, 0, 0); //Glass program Overides Coded PIDs
-
+  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
@@ -114,11 +114,23 @@ private void configureButtonBindings() {
     /* Manual reset for robot orientation */
     m_driverController.start()
         .onTrue(m_robotDrive.zeroHeadingCommand());
+    
+    m_driverController.a()
+        .whileTrue(new RunCommand(
+            () -> System.out.println(m_robotDrive.getPose().getRotation())));
+
+    m_driverController.b()
+        .whileTrue(new RunCommand(
+         () -> m_robotDrive.rotateToHeading(Math.atan2(m_robotDrive.getNearestGoalCoords().getY() - m_robotDrive.getPose().getY(), 
+                                                       m_robotDrive.getNearestGoalCoords().getX() - m_robotDrive.getPose().getX())
+                                    * Constants.radiansToDegrees, 
+                                     -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
+                                     -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband))));
 
     m_driverController.y()
       .whileTrue(new RunCommand(() -> m_robotDrive.drive(
-        m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getX(),
         m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getY(),
+        m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getX(),
         0,
         true),m_robotDrive));
 
@@ -130,24 +142,8 @@ private void configureButtonBindings() {
         false), 
       m_robotDrive));
     
-    //PROPOSED SOLUTIONS/DEBUG: 
-    // 1.Create variables in camerasubsystem directly to check the connection between the 2 subsystems
-    // 2.Pass X,Y, & Rotation into Odometry command and construct Pose2D in Drive locally
-
-    // m_driverController.back()
-    //   .onTrue(m_robotDrive.resetOdometryCommand(new Pose2d(m_cameraSubsystem.getRobotPos(), new Rotation2d(0))));
-    
     m_driverController.back()
       .onTrue(m_cameraSubsystem.cameraOdoCmd());
-
-    // m_driverController.back()
-    //   .onTrue(Commands.print("This is this:" + m_cameraSubsystem.getRobotPos2()));
-
-    // m_driverController.back()
-    //   .onTrue(m_robotDrive.resetOdometryCommand(m_cameraSubsystem.cameraRobotPose2d()));                                            
-
-    // m_driverController.y()
-    //   .onTrue(m_robotDrive.resetOdometryCommand(new Pose2d(1, 2, new Rotation2d(45))));
 
 }
 

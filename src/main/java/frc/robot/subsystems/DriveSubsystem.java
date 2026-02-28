@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
@@ -72,7 +73,8 @@ public class DriveSubsystem extends SubsystemBase {
   private final AHRS navX = new AHRS(AHRS.NavXComType.kMXP_SPI, AHRS.NavXUpdateRate.k50Hz);
   private RobotConfig robotAutoConfig;
 
-  private PIDController rotationPID= new PIDController(0.01, 0, 0);
+  private PIDController rotationPID = new PIDController(0.0034, 0, 0);
+  private PIDController transPID = new PIDController(0.01, 0, 0);
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
@@ -144,7 +146,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Update the odometry in the periodic block
+    // Update the odometry in the periodic block    
     m_odometry.update(
         Rotation2d.fromDegrees(-navX.getAngle()),
         new SwerveModulePosition[] {
@@ -165,7 +167,7 @@ public class DriveSubsystem extends SubsystemBase {
     // if(localRobotContainer.m_cameraSubsystem.cameraRobotPose2d().getTranslation().getDistance(new Translation2d(0,0)) != 0){
     //   m_estimator.addVisionMeasurement(localRobotContainer.m_cameraSubsystem.cameraRobotPose2d(), Timer.getFPGATimestamp());
     // }
-    m_field_odometry.setRobotPose(this.getPose());
+    m_field_odometry.setRobotPose(m_odometry.getPoseMeters());
     m_field_estimator.setRobotPose(m_estimator.getEstimatedPosition());
 
   }
@@ -329,9 +331,6 @@ public class DriveSubsystem extends SubsystemBase {
 
 
 
-
-  
-
   //Alignment code for the robot
   public Translation2d radialOffset(double radius, double theta){
     //coordinates in relation to the goal
@@ -341,8 +340,8 @@ public class DriveSubsystem extends SubsystemBase {
     Translation2d targetPolar = new Translation2d(radius, theta);
     Translation2d targetCartes = localRobotContainer.polarToCartesian(targetPolar);
     //pid calculationers
-    double xmove = rotationPID.calculate(currentCartes.getX(), targetCartes.getX());
-    double ymove = rotationPID.calculate(currentCartes.getY(), targetCartes.getY());
+    double xmove = transPID.calculate(currentCartes.getX(), targetCartes.getX());
+    double ymove = transPID.calculate(currentCartes.getY(), targetCartes.getY());
     Translation2d movement = new Translation2d(xmove,ymove);
     return movement;
   }
@@ -373,6 +372,16 @@ public class DriveSubsystem extends SubsystemBase {
         } else {
             return Constants.FieldConstants.redGoal;
         }
+    } 
+    public void rotateToHeading(double targetHeading, double xSpeed, double ySpeed){
+      double error = targetHeading-getPose().getRotation().getDegrees();
+      if(error > 180){
+        drive(xSpeed, ySpeed, rotationPID.calculate(-error + 360, 0), true);
+      }else if (error < -180) {
+        drive(xSpeed, ySpeed, rotationPID.calculate(-error - 360, 0), true);
+      } else {
+        drive(xSpeed, ySpeed, rotationPID.calculate(-error, 0), true);
+      }
     }
 
 }
