@@ -115,9 +115,16 @@ private void configureButtonBindings() {
     m_driverController.start()
         .onTrue(m_robotDrive.zeroHeadingCommand());
     
+    // m_driverController.a()
+    //     .whileTrue(new RunCommand(
+    //         () -> System.out.println(m_robotDrive.getPose().getRotation())));
     m_driverController.a()
-        .whileTrue(new RunCommand(
-            () -> System.out.println(m_robotDrive.getPose().getRotation())));
+          .whileTrue(new RunCommand(             
+         () -> m_robotDrive.rotateToHeading(Math.atan2(m_robotDrive.getShooterTarget().getY() - m_robotDrive.getPose().getY(), 
+                                                       m_robotDrive.getShooterTarget().getX() - m_robotDrive.getPose().getX())
+                                    * Constants.radiansToDegrees, 
+                                     -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
+                                     -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband))));
 
     m_driverController.b()
         .whileTrue(new RunCommand(
@@ -126,6 +133,7 @@ private void configureButtonBindings() {
                                     * Constants.radiansToDegrees, 
                                      -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
                                      -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband))));
+    
 
     m_driverController.y()
       .whileTrue(new RunCommand(() -> m_robotDrive.drive(

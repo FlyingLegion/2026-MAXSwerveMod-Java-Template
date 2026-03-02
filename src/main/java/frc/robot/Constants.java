@@ -120,6 +120,10 @@ public final class Constants {
     //ALL MEASURES IN METERS
     public static final Translation2d blueGoal = new Translation2d(4.611624,4.021328);
     public static final Translation2d redGoal = new Translation2d(11.901424,4.021328);
+    public static final Translation2d backLeftAreaRed = new Translation2d(14.207236, 2.010664);
+    public static final Translation2d backRightAreaRed = new Translation2d(14.207236, 6.531992);
+    public static final Translation2d backRightAreaBlu = new Translation2d(2.3,6.031992);
+    public static final Translation2d backLeftAreaBlu = new Translation2d(2.3, 2.010664);
   }
 
 

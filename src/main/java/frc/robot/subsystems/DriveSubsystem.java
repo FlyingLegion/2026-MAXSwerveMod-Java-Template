@@ -28,12 +28,14 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -372,7 +374,36 @@ public class DriveSubsystem extends SubsystemBase {
         } else {
             return Constants.FieldConstants.redGoal;
         }
-    } 
+    }
+    public Translation2d getShooterTarget() {
+      boolean robotIsRed = false;
+      var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+          if(alliance.get() == DriverStation.Alliance.Red){
+            robotIsRed = true;
+          }
+        } else{
+          robotIsRed = false; 
+        }
+        if(robotIsRed){
+          if(getPose().getX() > Constants.FieldConstants.redGoal.getX()){
+            return Constants.FieldConstants.redGoal;
+          } else if(getPose().getY() < Constants.FieldConstants.redGoal.getY()){
+            return Constants.FieldConstants.backLeftAreaRed;
+          } else{
+            return Constants.FieldConstants.backRightAreaRed;
+          }
+        } else { // robot is Blue
+          if(getPose().getX() < Constants.FieldConstants.blueGoal.getX()){
+            return Constants.FieldConstants.blueGoal;
+          } else if(getPose().getY() < Constants.FieldConstants.blueGoal.getY()){
+            return Constants.FieldConstants.backLeftAreaBlu;
+          } else {
+            return Constants.FieldConstants.backRightAreaBlu;
+          }
+        }
+    }
+
     public void rotateToHeading(double targetHeading, double xSpeed, double ySpeed){
       double error = targetHeading-getPose().getRotation().getDegrees();
       if(error > 180){
