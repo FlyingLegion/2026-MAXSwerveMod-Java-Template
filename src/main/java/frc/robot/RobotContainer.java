@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.AutoConstants;
+//import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,6 +31,8 @@ import java.util.List;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.auto.NamedCommands;
+// on the other code but not used so ?
 
 //subsystems
 import frc.robot.subsystems.DriveSubsystem;
@@ -98,10 +100,10 @@ private void configureButtonBindings() {
             () -> m_robotDrive.setX(),
             m_robotDrive));
             
-    m_driverController.leftBumper()
-        .whileTrue(new RunCommand(
-            () -> m_robotDrive.drive(0.15, 0.0, 0.0 ,false),
-            m_robotDrive));
+    // m_driverController.leftBumper()
+    //     .whileTrue(new RunCommand(
+    //         () -> m_robotDrive.drive(0.15, 0.0, 0.0 ,false),
+    //         m_robotDrive));
     
     // m_driverController.rightBumper()
     //     .whileTrue(new RunCommand(
@@ -135,20 +137,20 @@ private void configureButtonBindings() {
                                      -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband))));
     
 
-    m_driverController.y()
-      .whileTrue(new RunCommand(() -> m_robotDrive.drive(
-        m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getY(),
-        m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getX(),
-        0,
-        true),m_robotDrive));
+    // m_driverController.y()
+    //   .whileTrue(new RunCommand(() -> m_robotDrive.drive(
+    //     m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getY(),
+    //     m_robotDrive.radialOffset(m_robot.globalRadiusTarget, m_robot.globalThetaTarget).getX(),
+    //     0,
+    //     true),m_robotDrive));
 
-    m_driverController.x()
-     .whileTrue(new RunCommand(() -> m_robotDrive.drive(
-        -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
-        -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
-        m_robotDrive.getAngularSpeedToNearestGoal(), 
-        false), 
-      m_robotDrive));
+    // m_driverController.x()
+    //  .whileTrue(new RunCommand(() -> m_robotDrive.drive(
+    //     -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
+    //     -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
+    //     m_robotDrive.getAngularSpeedToNearestGoal(), 
+    //     false), 
+    //   m_robotDrive));
     
     m_driverController.back()
       .onTrue(m_cameraSubsystem.cameraOdoCmd());
@@ -160,6 +162,8 @@ public Command getAutonomousCommand(int autoSelected) {
   String autoArray[] = new String[autoArraySize];
 
   autoArray[0] = "Test Auto";
+  autoArray[1] = "Test Rotation Auto";
+  System.out.println("Get AutonCommand " + autoSelected);
 
   return new PathPlannerAuto(autoArray[autoSelected]);
 }

@@ -21,7 +21,8 @@ public class Robot extends TimedRobot {
   public double globalThetaTarget = 3*Math.PI/2;
 
   String[] autonomousList = {
-    "Test Auto"
+    "Test Auto",
+    "Test Rotation Auto"
   };
 
   String autoSelected; 
@@ -67,11 +68,18 @@ public class Robot extends TimedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-      autoSelected = SmartDashboard.getString("Choose Your Auto:", "None");
-
+      autoSelected = SmartDashboard.getString("Auto Selector", "None");
+      System.out.println("Before AutoSwitch");
+      System.out.println(autoSelected);
       switch(autoSelected) {
         case "Test Auto":
-        m_autonomousCommand = m_robotContainer.getAutonomousCommand(0);
+        System.out.println("AutonInit Test Auto");
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand(0); //Runs Test Auto specifically 
+        break;
+
+        case "Test Rotation Auto" :
+        System.out.println("AutonInit Test Rotation Auto");
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand(1);
         break;
       }
 
@@ -80,7 +88,12 @@ public class Robot extends TimedRobot {
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
-      CommandScheduler.getInstance().schedule(m_autonomousCommand);
+      // CommandScheduler.getInstance().schedule(m_autonomousCommand);
+      m_autonomousCommand.schedule();
+      System.out.print("ScheduledAuto");
+    }
+    else {
+      System.out.println("Null AutoCommand");
     }
   }
 
@@ -102,8 +115,9 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    globalRadiusTarget += m_robotContainer.m_driverController.getLeftY();
-    globalThetaTarget += m_robotContainer.m_driverController.getRightX();
+    // globalRadiusTarget += m_robotContainer.m_driverController.getLeftY();
+    // globalThetaTarget += m_robotContainer.m_driverController.getRightX();
+
   }
 
   @Override

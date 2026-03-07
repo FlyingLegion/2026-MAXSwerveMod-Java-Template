@@ -121,10 +121,11 @@ public class DriveSubsystem extends SubsystemBase {
       this::getPose, // Robot pose supplier
       this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
       this::getRobotRelativeSpeed, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-      this::driveRobotRelativeSpeed, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+      (speeds) -> driveRobotRelativeSpeed(speeds),
+      // this::driveRobotRelativeSpeed, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
       new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
-        new PIDConstants(5, 0.0, 0.0), // Translation PID constants 
-        new PIDConstants(5, 0, 0.0) // Rotation PID constants
+        new PIDConstants(3, 0.0, 1), // Translation PID constants 
+        new PIDConstants(1, 0.0, 0.0) // Rotation PID constants
       ),
       robotAutoConfig, // The robot configuration
       () -> {
@@ -189,7 +190,7 @@ public class DriveSubsystem extends SubsystemBase {
    *
    * @param pose The pose to which to set the odometry.
    */
-  public void resetOdometry(Pose2d pose) {
+  public void resetOdometry(Pose2d pose) { //Must be changed to fix autobuilder command
     m_odometry.resetPosition(
         Rotation2d.fromDegrees(-navX.getAngle()),
         new SwerveModulePosition[] {
@@ -199,7 +200,7 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
         },
         pose);
-    
+
     m_estimator.resetPosition(
         Rotation2d.fromDegrees(-navX.getAngle()),
         new SwerveModulePosition[] {
@@ -245,11 +246,25 @@ public class DriveSubsystem extends SubsystemBase {
     double xSpeedDelivered = xSpeed * DriveConstants.kMaxSpeedMetersPerSecond;
     double ySpeedDelivered = ySpeed * DriveConstants.kMaxSpeedMetersPerSecond;
     double rotDelivered = rot * DriveConstants.kMaxAngularSpeed;
-
+    boolean robotIsRed = false;
+      var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+          if(alliance.get() == DriverStation.Alliance.Red){
+            robotIsRed = true;
+          }
+        } else{
+          robotIsRed = false; 
+        }
+    if (robotIsRed && fieldRelative){
+      xSpeedDelivered = -xSpeedDelivered;
+      ySpeedDelivered = -ySpeedDelivered;
+      rot = -rot;
+    }
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
             ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                Rotation2d.fromDegrees(-navX.getAngle()))
+                // Rotation2d.fromDegrees(-navX.getAngle()))
+                m_estimator.getEstimatedPosition().getRotation())
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
     SwerveDriveKinematics.desaturateWheelSpeeds(
         swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
@@ -319,7 +334,8 @@ public class DriveSubsystem extends SubsystemBase {
    * @return the robot's heading in degrees, from -180 to 180
    */
   public double getHeading() {
-    return Rotation2d.fromDegrees(-navX.getAngle()).getDegrees();
+    // return Rotation2d.fromDegrees(-navX.getAngle()).getDegrees();
+    return m_estimator.getEstimatedPosition().getRotation().getDegrees();
   }
 
   /**
@@ -354,11 +370,8 @@ public class DriveSubsystem extends SubsystemBase {
     double curr = (m_estimator.getEstimatedPosition().getRotation().getDegrees() + 360) % 360; 
     double targ = 90;
     // Math.atan2(getPose().getY() - getNearestGoalCoords().getY(), getPose().getX() - getNearestGoalCoords().getX())
-
-    
     // targ *= Constants.radiansToDegrees;
-    
-    return  rotationPID.calculate(curr, targ);
+    return rotationPID.calculate(curr, targ);
   }
 
   
@@ -375,6 +388,8 @@ public class DriveSubsystem extends SubsystemBase {
             return Constants.FieldConstants.redGoal;
         }
     }
+
+
     public Translation2d getShooterTarget() {
       boolean robotIsRed = false;
       var alliance = DriverStation.getAlliance();
