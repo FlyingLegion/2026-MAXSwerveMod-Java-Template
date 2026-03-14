@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Test Hump Bump"
+            "pathName": "Get fuel from center in start middle"
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "Test Intake Curve"
+            "commands": []
           }
         }
       ]
     }
   },
-  "resetOdom": false,
+  "resetOdom": true,
   "folder": null,
   "choreoAuto": false
 }

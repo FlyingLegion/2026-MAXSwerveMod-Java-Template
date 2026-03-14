@@ -17,7 +17,7 @@ public final class Configs {
                     / ModuleConstants.kDrivingMotorReduction;
             double turningFactor = 2 * Math.PI;
             double nominalVoltage = 12.0;
-            double feedForwardFactor = 0.13; // Adjust
+            double feedForwardFactor = 0.1; // Adjust
             double drivingVelocityFeedForward = (nominalVoltage / ModuleConstants.kDriveWheelFreeSpeedRps) * feedForwardFactor;
 
             drivingConfig

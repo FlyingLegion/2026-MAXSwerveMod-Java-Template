@@ -7,19 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Test Hump Bump"
+            "pathName": "Start to middle Path"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Test Intake Curve"
+            "pathName": "Pick up balls"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Back to hub to Shoot"
           }
         }
       ]
     }
   },
-  "resetOdom": false,
-  "folder": null,
+  "resetOdom": true,
+  "folder": "Folder",
   "choreoAuto": false
 }

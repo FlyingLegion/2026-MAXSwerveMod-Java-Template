@@ -75,13 +75,13 @@ public class DriveSubsystem extends SubsystemBase {
   private final AHRS navX = new AHRS(AHRS.NavXComType.kMXP_SPI, AHRS.NavXUpdateRate.k50Hz);
   private RobotConfig robotAutoConfig;
 
-  private PIDController rotationPID = new PIDController(0.0034, 0, 0);
+  private PIDController rotationPID = new PIDController(0.01, 0, 0);
   private PIDController transPID = new PIDController(0.01, 0, 0);
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(navX.getAngle()),
+      Rotation2d.fromDegrees(-navX.getAngle()),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
@@ -92,7 +92,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   SwerveDrivePoseEstimator m_estimator = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(navX.getAngle()),
+      Rotation2d.fromDegrees(-navX.getAngle()),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
